@@ -1,4 +1,6 @@
 'use client';
+
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import {
   IconBrandTwitter,
@@ -10,7 +12,6 @@ import {
   IconCopy,
 } from '@tabler/icons-react';
 import { SUPPORT_ADDRESS, SHORT_ADDRESS } from '@/lib/constants';
-import * as React from 'react';
 
 export function Footer({
   isDarkMode,
@@ -20,6 +21,7 @@ export function Footer({
   setIsDarkMode: (val: boolean) => void;
 }) {
   const [copied, setCopied] = React.useState(false);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(SUPPORT_ADDRESS);
     setCopied(true);
@@ -27,41 +29,52 @@ export function Footer({
   };
 
   return (
-    <footer className="border-t border-border pt-12 mt-12 pb-12">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-4">
-        {/* Left: Branding & Builder */}
-        <div className="flex flex-col gap-2 items-center md:items-start text-center md:text-left">
+    <footer className="border-t border-border py-6 mt-8">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
+        {/* Left: Branding & Disclaimer */}
+        <div className="flex flex-col gap-2 items-center md:items-start text-center md:text-left max-w-xs">
           <div className="flex items-center gap-2">
-            <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-[10px] font-bold text-primary-foreground">
+            <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+              <span className="text-[8px] font-bold text-primary-foreground">
                 M
               </span>
             </div>
-            <span className="font-bold text-lg tracking-tight">MokuDash</span>
+            <span className="font-bold text-base tracking-tight">MokuDash</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Built by <span className="font-bold text-foreground">@mxrkedz</span>
-          </p>
-          <p className="text-xs text-muted-foreground/60">
-            &copy; 2024 Moku Grand Arena.
-          </p>
+
+          <div className="space-y-1">
+            <div className="flex flex-col md:flex-row md:gap-2 text-xs text-muted-foreground/90">
+              <span>
+                Built by{' '}
+                <span className="font-bold text-foreground">@mxrkedz</span>
+              </span>
+              <span className="hidden md:inline">•</span>
+              <span>&copy; 2026 MokiDex</span>
+            </div>
+
+            {/* Added Disclaimer */}
+            <p className="text-[10px] text-muted-foreground/50 leading-tight">
+              MokiDex is an independent fan project not affiliated with or
+              endorsed by Moku. All trademarks belong to their respective
+              owners.
+            </p>
+          </div>
         </div>
 
-        {/* Middle: Support & Address (CENTERED) */}
-        <div className="flex flex-col gap-3 w-full md:w-auto max-w-sm md:max-w-md bg-muted/30 p-4 rounded-lg border border-border/50 items-center text-center">
-          <p className="text-sm font-medium text-foreground">
-            Your support translates directly into faster updates and better
-            features.
-          </p>
+        {/* Middle: Support & Address */}
+        <div className="flex flex-col gap-2 w-full md:w-auto items-center">
+          <span className="text-xs font-medium text-muted-foreground text-center">
+            Your support translates directly into faster updates.
+          </span>
 
-          <div className="flex items-center justify-center gap-2 bg-background/80 border border-border rounded-md px-3 py-1.5 w-fit">
-            <span className="font-mono text-xs text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 bg-muted/50 border border-border rounded-md px-2 py-1 w-fit">
+            <span className="font-mono text-[10px] text-muted-foreground">
               {SHORT_ADDRESS}
             </span>
             <Button
               variant="ghost"
               size="icon-xs"
-              className="h-5 w-5 hover:bg-muted ml-1"
+              className="h-4 w-4 hover:bg-muted ml-1"
               onClick={handleCopy}
               title="Copy Address"
             >
@@ -75,58 +88,59 @@ export function Footer({
         </div>
 
         {/* Right: Actions & Links */}
-        <div className="flex flex-col items-center md:items-end gap-4">
-          {/* Theme Toggle */}
+        <div className="flex flex-col items-center md:items-end gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">
-              Theme
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 rounded-full"
-              onClick={() => setIsDarkMode(!isDarkMode)}
-            >
-              {isDarkMode ? (
-                <IconMoon className="h-4 w-4 text-blue-400" />
-              ) : (
-                <IconSun className="h-4 w-4 text-orange-500" />
-              )}
-            </Button>
+            <div className="flex items-center border border-border rounded-full p-0.5">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="h-6 w-6 rounded-full hover:bg-muted"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                title="Toggle Theme"
+              >
+                {isDarkMode ? (
+                  <IconMoon className="h-3.5 w-3.5 text-blue-400" />
+                ) : (
+                  <IconSun className="h-3.5 w-3.5 text-orange-500" />
+                )}
+              </Button>
+            </div>
+
+            <div className="h-4 w-px bg-border mx-1" />
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="h-7 w-7 hover:bg-muted text-muted-foreground hover:text-blue-400"
+              >
+                <IconBrandTwitter className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="h-7 w-7 hover:bg-muted text-muted-foreground hover:text-indigo-400"
+              >
+                <IconBrandDiscord className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="h-7 w-7 hover:bg-muted text-muted-foreground hover:text-foreground"
+              >
+                <IconBrandGithub className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              className="h-8 w-8 hover:bg-muted hover:text-blue-400"
-            >
-              <IconBrandTwitter className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              className="h-8 w-8 hover:bg-muted hover:text-indigo-400"
-            >
-              <IconBrandDiscord className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              className="h-8 w-8 hover:bg-muted hover:text-foreground"
-            >
-              <IconBrandGithub className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="flex gap-4 text-xs text-muted-foreground">
+          {/* <div className="flex gap-3 text-[10px] text-muted-foreground">
             <a href="#" className="hover:text-foreground hover:underline">
               Terms
             </a>
             <a href="#" className="hover:text-foreground hover:underline">
               Privacy
             </a>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

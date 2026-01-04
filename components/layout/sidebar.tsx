@@ -44,7 +44,7 @@ export function Sidebar({
             isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           )}
         >
-          MokuDash
+          MokiDex
         </h1>
 
         <Button

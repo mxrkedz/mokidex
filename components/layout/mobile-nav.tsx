@@ -34,7 +34,7 @@ export function MobileNav({
         <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shadow-md">
           <span className="font-bold text-primary-foreground">M</span>
         </div>
-        <span className="font-bold text-lg tracking-tight">MokuDash</span>
+        <span className="font-bold text-lg tracking-tight">MokiDex</span>
       </div>
 
       {/* Mobile Menu Trigger */}
