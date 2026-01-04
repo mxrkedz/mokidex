@@ -25,10 +25,7 @@ export function AssetModal({ isOpen, onClose, asset }: AssetModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-3xl p-0 bg-background text-foreground border-border shadow-2xl focus:outline-none w-[90vw] max-h-[85vh] overflow-y-auto rounded-xl md:overflow-hidden md:max-h-none">
-        <DialogClose className="absolute right-4 top-4 z-50 opacity-70 hover:opacity-100 transition-opacity">
-          <IconX className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </DialogClose>
+        <DialogClose className="absolute right-4 top-4 z-50 opacity-70 hover:opacity-100 transition-opacity"/>
 
         {asset && (
           <div className="flex flex-col md:flex-row bg-background">
