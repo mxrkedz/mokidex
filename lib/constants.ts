@@ -207,3 +207,7 @@ export const NAV_ITEMS = [
 ];
 
 export const SUPPORT_ADDRESS = '0x61759fb5255532f8f977d0a51b7037651becac74';
+
+export const SHORT_ADDRESS = `${SUPPORT_ADDRESS.slice(0, 6)}...${SUPPORT_ADDRESS.slice(
+  -4
+)}`;
