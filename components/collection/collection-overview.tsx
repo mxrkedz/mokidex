@@ -8,65 +8,71 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from 'recharts';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { IconCards, IconBox, IconPackage } from '@tabler/icons-react';
-
-import { HISTORY_DATA } from '@/lib/constants';
-import { TimeRange } from '@/lib/types';
+import { IconCards, IconPackage } from '@tabler/icons-react';
+import { RealNFT } from '@/lib/nft-types';
 
 const chartConfig = {
   value: { label: 'Value (RON)', color: '#2563eb' },
 };
 
+interface CollectionOverviewProps {
+  isPrivacyMode: boolean;
+  assets: RealNFT[];
+  historyData: { date: string; value: number }[]; // New Prop
+}
+
 export function CollectionOverview({
   isPrivacyMode,
-}: {
-  isPrivacyMode: boolean;
-}) {
-  // State for the Graph Tabs (24h, 7d, etc.)
-  const [timeRange, setTimeRange] = React.useState<TimeRange>('7d');
+  assets,
+  historyData,
+}: CollectionOverviewProps) {
+  // Calculate Counts
+  const mokiCount = assets.filter((a) => a.contractType === 'Moki').length;
+  const boosterCount = assets.filter(
+    (a) => a.contractType === 'Booster'
+  ).length;
+  const totalCount = assets.length;
 
-  // Mock asset counts
-  const assets = [
+  const statsItems = [
     {
-      label: 'Cards',
-      count: 142,
+      label: 'Moki NFT',
+      count: mokiCount,
       icon: IconCards,
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10',
+      color: 'text-green-500',
+      bg: 'bg-green-500/10',
     },
     {
-      label: 'Booster Packs',
-      count: 5,
+      label: 'Booster Box',
+      count: boosterCount,
       icon: IconPackage,
       color: 'text-purple-500',
       bg: 'bg-purple-500/10',
-    },
-    {
-      label: 'Booster Boxes',
-      count: 2,
-      icon: IconBox,
-      color: 'text-orange-500',
-      bg: 'bg-orange-500/10',
     },
   ];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* LEFT: Asset Summary Stats */}
+      {/* LEFT: Inventory Status */}
       <Card className="lg:col-span-1 h-full">
         <CardHeader>
-          <CardTitle>My Assets</CardTitle>
-          <CardDescription>Inventory breakdown</CardDescription>
+          <CardTitle>Inventory Status</CardTitle>
+          <CardDescription>Asset distribution</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {assets.map((item) => (
+          {statsItems.map((item) => (
             <div
               key={item.label}
               className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30"
@@ -86,46 +92,39 @@ export function CollectionOverview({
           <div className="pt-4 mt-2 border-t border-border">
             <div className="flex justify-between text-sm text-muted-foreground mb-1">
               <span>Total Items</span>
-              <span>149</span>
+              <span>{totalCount}</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2 overflow-hidden flex">
-              <div className="bg-blue-500 h-full w-[85%]" />
-              <div className="bg-purple-500 h-full w-[10%]" />
-              <div className="bg-orange-500 h-full w-[5%]" />
+              <div
+                className="bg-green-500 h-full transition-all duration-500"
+                style={{
+                  width: `${
+                    totalCount > 0 ? (mokiCount / totalCount) * 100 : 0
+                  }%`,
+                }}
+              />
+              <div
+                className="bg-purple-500 h-full transition-all duration-500"
+                style={{
+                  width: `${
+                    totalCount > 0 ? (boosterCount / totalCount) * 100 : 0
+                  }%`,
+                }}
+              />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* RIGHT: Portfolio History Chart (Exact copy of Dashboard logic) */}
+      {/* RIGHT: Portfolio History Chart */}
       <Card className="lg:col-span-2 flex flex-col">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
+        <CardHeader className="pb-4">
           <div className="space-y-1">
             <CardTitle>Portfolio History</CardTitle>
-            <CardDescription>Value fluctuation (RON)</CardDescription>
+            <CardDescription>
+              Value based on recent trade history (RON)
+            </CardDescription>
           </div>
-
-          {/* Time Range Tabs */}
-          <Tabs
-            value={timeRange}
-            onValueChange={(val) => setTimeRange(val as TimeRange)}
-            className="w-full sm:w-auto"
-          >
-            <TabsList className="grid w-full grid-cols-4 sm:w-64 h-8">
-              <TabsTrigger value="24h" className="text-xs">
-                24h
-              </TabsTrigger>
-              <TabsTrigger value="7d" className="text-xs">
-                7d
-              </TabsTrigger>
-              <TabsTrigger value="30d" className="text-xs">
-                30d
-              </TabsTrigger>
-              <TabsTrigger value="All" className="text-xs">
-                All
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
         </CardHeader>
 
         <CardContent className="pl-0 pb-0 flex-1 min-h-[300px]">
@@ -135,7 +134,7 @@ export function CollectionOverview({
           >
             <AreaChart
               accessibilityLayer
-              data={HISTORY_DATA[timeRange]}
+              data={historyData}
               margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
             >
               <defs>
@@ -163,6 +162,7 @@ export function CollectionOverview({
                 strokeDasharray="3 3"
                 className="stroke-muted"
               />
+
               <XAxis
                 dataKey="date"
                 tickLine={false}
@@ -170,7 +170,9 @@ export function CollectionOverview({
                 tickMargin={8}
                 fontSize={12}
                 stroke="#888888"
+                minTickGap={32}
               />
+
               <YAxis
                 tickLine={false}
                 axisLine={false}
@@ -178,16 +180,19 @@ export function CollectionOverview({
                 fontSize={12}
                 stroke="#888888"
                 hide={isPrivacyMode}
-                tickFormatter={(value) => `₳${value}`}
+                tickFormatter={(value) => `${value.toLocaleString()}`}
                 domain={['auto', 'auto']}
               />
+
               <ChartTooltip
                 cursor={false}
                 content={<ChartTooltipContent indicator="dot" hideLabel />}
               />
+
               <Area
                 dataKey="value"
                 type="monotone"
+                animationDuration={1500}
                 fill="url(#fillValueCollection)"
                 fillOpacity={1}
                 stroke="var(--color-value)"

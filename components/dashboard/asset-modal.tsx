@@ -11,14 +11,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { IconArrowsExchange, IconInfoCircle } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
-import { MokuAsset } from '@/lib/types';
-import { RARITY_COLORS } from '@/lib/constants';
+import { RealNFT } from '@/lib/nft-types';
 import { ThreeDCard } from '@/components/shared/three-d-card';
+
+// Define Rarity Colors locally since we removed constants.ts
+const RARITY_COLORS: Record<string, string> = {
+  Common: '#9ca3af',
+  Uncommon: '#86efac',
+  Rare: '#60a5fa',
+  Epic: '#a78bfa',
+  Legendary: '#fb923c',
+};
 
 interface AssetModalProps {
   isOpen: boolean;
   onClose: (open: boolean) => void;
-  asset: MokuAsset | null;
+  asset: RealNFT | null;
 }
 
 export function AssetModal({ isOpen, onClose, asset }: AssetModalProps) {
@@ -43,15 +51,15 @@ export function AssetModal({ isOpen, onClose, asset }: AssetModalProps) {
                     variant="outline"
                     className={cn(
                       'uppercase tracking-widest text-[10px]',
-                      asset.type === 'Scheme'
-                        ? 'text-blue-500 border-blue-500/30'
-                        : 'text-primary border-primary/30'
+                      asset.type === 'Booster'
+                        ? 'text-purple-500 border-purple-500/30'
+                        : 'text-green-500 border-green-500/30'
                     )}
                   >
-                    {asset.type} Card
+                    {asset.type}
                   </Badge>
                   <span className="text-sm font-mono text-muted-foreground">
-                    #{asset.id.split('-')[1].padStart(4, '0')}
+                    #{asset.tokenId}
                   </span>
                 </div>
                 <DialogTitle className="text-2xl font-bold">
@@ -61,7 +69,7 @@ export function AssetModal({ isOpen, onClose, asset }: AssetModalProps) {
                   <div
                     className="w-2 h-2 rounded-full"
                     style={{
-                      backgroundColor: RARITY_COLORS[asset.rarity],
+                      backgroundColor: RARITY_COLORS[asset.rarity] || '#ccc',
                     }}
                   />
                   <span className="text-sm text-muted-foreground">
@@ -71,25 +79,34 @@ export function AssetModal({ isOpen, onClose, asset }: AssetModalProps) {
               </DialogHeader>
 
               <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-muted/50 border border-border text-sm italic text-muted-foreground">
-                  &quot;{asset.description}&quot;
-                </div>
+                {asset.description && (
+                  <div className="p-4 rounded-lg bg-muted/50 border border-border text-sm italic text-muted-foreground">
+                    &quot;{asset.description}&quot;
+                  </div>
+                )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  {asset.stats.map((stat, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-col p-3 rounded-md border border-border bg-card/50"
-                    >
-                      <span className="text-[10px] uppercase text-muted-foreground font-semibold mb-1">
-                        {stat.label}
-                      </span>
-                      <span className="font-medium text-foreground">
-                        {stat.value}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {/* Map Attributes to Stats Grid */}
+                {asset.attributes.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-2">
+                    {asset.attributes.map((attr, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col p-3 rounded-md border border-border bg-card/50"
+                      >
+                        <span className="text-[10px] uppercase text-muted-foreground font-semibold mb-1 truncate">
+                          {attr.trait_type}
+                        </span>
+                        <span className="font-medium text-foreground truncate">
+                          {attr.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No stats available.
+                  </p>
+                )}
               </div>
 
               <div className="mt-auto pt-6 flex gap-3">

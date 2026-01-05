@@ -2,108 +2,103 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { IconSearch, IconPlus, IconFilter } from '@tabler/icons-react';
-import { Rarity, CardType } from '@/lib/types';
+import { IconSearch, IconFilter, IconPlus } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 
-// Define the asset categories for the filter
-export type AssetCategory =
-  | 'All'
-  | 'Booster Box'
-  | 'Cards'
-  | 'Packs'
-  | 'Moku NFT';
+export type SortOption =
+  | 'most-rare'
+  | 'least-rare'
+  | 'most-value'
+  | 'least-value';
 
 interface CollectionToolbarProps {
+  activeTab: string;
+  onTabChange: (val: string) => void;
   searchQuery: string;
   setSearchQuery: (val: string) => void;
-  rarityFilter: Rarity | 'All';
-  setRarityFilter: (val: Rarity | 'All') => void;
-  assetCategory: AssetCategory;
-  setAssetCategory: (val: AssetCategory) => void;
+  sortOption: SortOption;
+  setSortOption: (val: SortOption) => void;
   onAddCard: () => void;
 }
 
 export function CollectionToolbar({
+  activeTab,
+  onTabChange,
   searchQuery,
   setSearchQuery,
-  rarityFilter,
-  setRarityFilter,
-  assetCategory,
-  setAssetCategory,
+  sortOption,
+  setSortOption,
   onAddCard,
 }: CollectionToolbarProps) {
-  const categories: AssetCategory[] = [
-    'All',
-    'Booster Box',
-    'Cards',
-    'Packs',
-    'Moku NFT',
+  const tabs = [
+    { id: 'All', label: 'All Items' },
+    { id: 'Moki', label: 'Moki NFT' },
+    { id: 'Booster', label: 'Booster Box' },
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Top Row: Asset Category Tabs & Add Button */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        {/* Category Tabs */}
-        <div className="flex flex-wrap items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setAssetCategory(cat)}
-              className={cn(
-                'px-4 py-1.5 text-sm font-medium rounded-md transition-all',
-                assetCategory === cat
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              )}
+    <div className="flex flex-col gap-4">
+      {/* Top Row: Search, Sort, Add */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        {/* Left: Search & Filter */}
+        <div className="flex flex-1 gap-3 w-full md:w-auto">
+          {/* Search */}
+          <div className="relative flex-1 md:max-w-xs">
+            <IconSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search assets..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-9 pl-9 pr-4 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+          </div>
+
+          {/* Sort Select */}
+          <div className="relative w-48">
+            <select
+              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring appearance-none cursor-pointer"
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as SortOption)}
             >
-              {cat}
-            </button>
-          ))}
+              <option value="most-value">Most Value</option>
+              <option value="least-value">Least Value</option>
+              <option value="most-rare">Most Rare</option>
+              <option value="least-rare">Least Rare</option>
+            </select>
+            <IconFilter className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
         </div>
 
-        {/* Add Card Button (Matching Header Style) */}
-        <Button
-          onClick={onAddCard}
-          className="gap-2 bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto"
-        >
-          <IconPlus size={16} />
-          <span className="hidden sm:inline">Add Custom Asset</span>
-          <span className="inline sm:hidden">Add</span>
-        </Button>
+        {/* Right: Add Button */}
+        <div className="flex items-center w-full md:w-auto justify-end">
+          <Button
+            onClick={onAddCard}
+            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <IconPlus size={16} />
+            <span className="hidden sm:inline">Add Custom Item</span>
+            <span className="inline sm:hidden">Add</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Bottom Row: Search & Rarity Filter */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search */}
-        <div className="relative flex-1">
-          <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search collection..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-10 pl-9 pr-4 rounded-md border border-input bg-background px-3 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          />
-        </div>
-
-        {/* Rarity Select */}
-        <div className="relative w-full sm:w-[180px]">
-          <select
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring appearance-none cursor-pointer"
-            value={rarityFilter}
-            onChange={(e) => setRarityFilter(e.target.value as Rarity | 'All')}
+      {/* Bottom Row: Tabs */}
+      <div className="flex items-center gap-2 border-b border-border pb-1">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 transition-all duration-200',
+              activeTab === tab.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/50'
+            )}
           >
-            <option value="All">All Rarities</option>
-            <option value="Common">Common</option>
-            <option value="Uncommon">Uncommon</option>
-            <option value="Rare">Rare</option>
-            <option value="Epic">Epic</option>
-            <option value="Legendary">Legendary</option>
-          </select>
-          <IconFilter className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        </div>
+            {tab.label}
+          </button>
+        ))}
       </div>
     </div>
   );

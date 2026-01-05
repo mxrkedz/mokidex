@@ -1,15 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { MokuAsset } from '@/lib/types';
+import { RealNFT } from '@/lib/nft-types';
 import { ThreeDCard } from '@/components/shared/three-d-card';
 import { Button } from '@/components/ui/button';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 
 interface CollectionGridProps {
-  assets: MokuAsset[];
+  assets: RealNFT[];
   itemsPerPage?: number;
-  onCardClick: (asset: MokuAsset) => void;
+  onCardClick: (asset: RealNFT) => void;
 }
 
 export function CollectionGrid({
@@ -19,7 +19,6 @@ export function CollectionGrid({
 }: CollectionGridProps) {
   const [currentPage, setCurrentPage] = React.useState(1);
 
-  // Reset page when data changes (e.g. filtering)
   React.useEffect(() => {
     setCurrentPage(1);
   }, [assets.length]);
@@ -32,19 +31,19 @@ export function CollectionGrid({
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border rounded-xl bg-card/50">
         <p>No cards found.</p>
-        <span className="text-xs mt-1">Try adjusting your filters.</span>
+        <span className="text-xs mt-1">
+          Try adjusting your filters or connecting wallet.
+        </span>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {currentAssets.map((asset) => (
-          // Wrapper to capture click and constrain size
           <div
-            key={asset.id}
+            key={`${asset.contractAddress}-${asset.id}`}
             className="aspect-[4/5] cursor-pointer group perspective-1000"
             onClick={() => onCardClick(asset)}
           >
@@ -53,7 +52,6 @@ export function CollectionGrid({
         ))}
       </div>
 
-      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-8">
           <Button
