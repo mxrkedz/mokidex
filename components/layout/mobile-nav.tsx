@@ -1,6 +1,9 @@
 'use client';
 
-import { buttonVariants } from '@/components/ui/button';
+import * as React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -12,32 +15,25 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { IconMenu2, IconUser } from '@tabler/icons-react';
-import { NAV_ITEMS } from '@/lib/constants'; // Ensure you did Phase 1 (Step 2)
+import { NAV_ITEMS } from '@/lib/constants';
 
 interface MobileNavProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   isConnected: boolean;
   handleConnect: () => void;
 }
 
-export function MobileNav({
-  activeTab,
-  setActiveTab,
-  isConnected,
-  handleConnect,
-}: MobileNavProps) {
+export function MobileNav({ isConnected, handleConnect }: MobileNavProps) {
+  const pathname = usePathname();
+
   return (
     <header className="md:hidden h-16 border-b border-border bg-card/50 backdrop-blur-xl flex items-center justify-between px-4 shrink-0 z-50">
-      {/* Mobile Logo */}
       <div className="flex items-center gap-2">
         <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shadow-md">
           <span className="font-bold text-primary-foreground">M</span>
         </div>
-        <span className="font-bold text-lg tracking-tight">MokiDex</span>
+        <span className="font-bold text-lg tracking-tight">MokuDash</span>
       </div>
 
-      {/* Mobile Menu Trigger */}
       <DropdownMenu>
         <DropdownMenuTrigger
           className={buttonVariants({ variant: 'ghost', size: 'icon' })}
@@ -47,16 +43,17 @@ export function MobileNav({
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuGroup>
             <DropdownMenuLabel>Navigation</DropdownMenuLabel>
-            {NAV_ITEMS.map((item) => (
-              <DropdownMenuItem
-                key={item.name}
-                onClick={() => setActiveTab(item.name)}
-                className={activeTab === item.name ? 'bg-accent' : ''}
-              >
-                <item.icon className="mr-2 h-4 w-4" />
-                <span>{item.name}</span>
-              </DropdownMenuItem>
-            ))}
+            {NAV_ITEMS.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link key={item.name} href={item.href} passHref>
+                  <DropdownMenuItem className={isActive ? 'bg-accent' : ''}>
+                    <item.icon className="mr-2 h-4 w-4" />
+                    <span>{item.name}</span>
+                  </DropdownMenuItem>
+                </Link>
+              );
+            })}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>

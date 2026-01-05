@@ -1,21 +1,20 @@
 'use client';
+
 import * as React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { IconPin, IconUser } from '@tabler/icons-react';
 import { NAV_ITEMS } from '@/lib/constants';
 
-const navItems = NAV_ITEMS;
-export function Sidebar({
-  activeTab,
-  setActiveTab,
-  isConnected,
-}: {
-  activeTab: string;
-  setActiveTab: (val: string) => void;
+interface SidebarProps {
   isConnected: boolean;
-}) {
+}
+
+export function Sidebar({ isConnected }: SidebarProps) {
   const [isPinned, setIsPinned] = React.useState(true);
+  const pathname = usePathname();
 
   return (
     <aside
@@ -24,6 +23,7 @@ export function Sidebar({
         isPinned ? 'w-64' : 'w-16 hover:w-64'
       )}
     >
+      {/* Logo Section */}
       <div className="h-14 flex items-center shrink-0 mb-2 px-0 relative overflow-hidden">
         <div
           className={cn(
@@ -44,7 +44,7 @@ export function Sidebar({
             isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           )}
         >
-          MokiDex
+          MokuDash
         </h1>
 
         <Button
@@ -63,38 +63,47 @@ export function Sidebar({
         </Button>
       </div>
 
+      {/* Nav */}
       <nav className="flex-1 space-y-1">
-        {navItems.map((item) => (
-          <Button
-            key={item.name}
-            variant={activeTab === item.name ? 'secondary' : 'ghost'}
-            className={cn(
-              'w-full justify-start px-0 overflow-hidden relative transition-all duration-300 h-10 rounded-md',
-              activeTab === item.name ? 'bg-secondary' : ''
-            )}
-            onClick={() => setActiveTab(item.name)}
-          >
-            <span
-              className={cn(
-                'w-full flex items-center justify-center shrink-0 transition-all duration-300',
-                isPinned ? 'w-10' : 'group-hover:w-10'
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-            </span>
+        {NAV_ITEMS.map((item) => {
+          // Check if link is active
+          const isActive = pathname === item.href;
 
-            <span
-              className={cn(
-                'transition-opacity duration-300 whitespace-nowrap absolute left-10',
-                isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-              )}
-            >
-              {item.name}
-            </span>
-          </Button>
-        ))}
+          return (
+            <Link key={item.name} href={item.href} passHref>
+              <Button
+                variant={isActive ? 'secondary' : 'ghost'}
+                className={cn(
+                  'w-full justify-start px-0 overflow-hidden relative transition-all duration-300 h-10 rounded-md',
+                  isActive ? 'bg-secondary' : ''
+                )}
+              >
+                <span
+                  className={cn(
+                    'w-full flex items-center justify-center shrink-0 transition-all duration-300',
+                    isPinned ? 'w-10' : 'group-hover:w-10'
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                </span>
+
+                <span
+                  className={cn(
+                    'transition-opacity duration-300 whitespace-nowrap absolute left-10',
+                    isPinned
+                      ? 'opacity-100'
+                      : 'opacity-0 group-hover:opacity-100'
+                  )}
+                >
+                  {item.name}
+                </span>
+              </Button>
+            </Link>
+          );
+        })}
       </nav>
 
+      {/* User Section */}
       <div className="mt-auto pt-2 border-t border-border">
         <div className="flex items-center h-12 rounded-md hover:bg-card/50 cursor-pointer transition-all duration-300 relative overflow-hidden">
           <div

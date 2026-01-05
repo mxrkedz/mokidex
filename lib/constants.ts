@@ -6,7 +6,7 @@ import {
   IconBuildingStore,
   IconTrophy,
 } from '@tabler/icons-react';
-import { MokuAsset, Rarity, TimeRange } from './types';
+import { CardType, MokuAsset, Rarity, TimeRange } from './types';
 
 export const HISTORY_DATA: Record<
   TimeRange,
@@ -198,16 +198,49 @@ export const RARITY_COLORS: Record<Rarity, string> = {
 };
 
 export const NAV_ITEMS = [
-  { name: 'Dashboard', icon: IconLayoutDashboard },
-  { name: 'Collection', icon: IconCards },
-  { name: 'Deck Builder', icon: IconDeviceGamepad2 },
-  { name: 'Arena Stats', icon: IconChartBar },
-  { name: 'Marketplace', icon: IconBuildingStore },
-  { name: 'Leaderboard', icon: IconTrophy },
+  { name: 'Dashboard', icon: IconLayoutDashboard, href: '/' },
+  { name: 'Collection', icon: IconCards, href: '/collection' },
+  { name: 'Deck Builder', icon: IconDeviceGamepad2, href: '#' }, // Placeholder
+  { name: 'Arena Stats', icon: IconChartBar, href: '#' }, // Placeholder
+  { name: 'Marketplace', icon: IconBuildingStore, href: '#' }, // Placeholder
+  { name: 'Leaderboard', icon: IconTrophy, href: '#' }, // Placeholder
 ];
 
 export const SUPPORT_ADDRESS = '0x61759fb5255532f8f977d0a51b7037651becac74';
 
-export const SHORT_ADDRESS = `${SUPPORT_ADDRESS.slice(0, 6)}...${SUPPORT_ADDRESS.slice(
-  -4
-)}`;
+export const SHORT_ADDRESS = `${SUPPORT_ADDRESS.slice(
+  0,
+  6
+)}...${SUPPORT_ADDRESS.slice(-4)}`;
+
+export const ALL_MOCK_ASSETS: MokuAsset[] = Array.from({ length: 48 }).map(
+  (_, i) => {
+    const types: CardType[] = ['Moki', 'Scheme', 'Promo'];
+    const rarities: Rarity[] = [
+      'Common',
+      'Uncommon',
+      'Rare',
+      'Epic',
+      'Legendary',
+    ];
+    const colors = ['#9ca3af', '#86efac', '#60a5fa', '#a78bfa', '#fb923c'];
+
+    const rarityIndex = Math.floor(Math.random() * rarities.length);
+    const typeIndex = Math.floor(Math.random() * types.length);
+
+    return {
+      id: `asset-${1000 + i}`,
+      name: `Moku Card #${1000 + i}`,
+      rarity: rarities[rarityIndex],
+      type: types[typeIndex],
+      floorPriceRon: Math.floor(Math.random() * 500) + 10,
+      stars: Math.floor(Math.random() * 5) + 1,
+      color: colors[rarityIndex],
+      description: 'Generated mock card for collection view testing.',
+      stats: [
+        { label: 'Power', value: String(Math.floor(Math.random() * 100) + 50) },
+        { label: 'Speed', value: String(Math.floor(Math.random() * 10)) },
+      ],
+    };
+  }
+);

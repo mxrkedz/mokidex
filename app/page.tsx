@@ -30,7 +30,6 @@ import {
 
 export default function DashboardPage() {
   // Global State
-  const [activeTab, setActiveTab] = React.useState('Dashboard');
   const [isConnected, setIsConnected] = React.useState(false);
   const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
   const [isDarkMode, setIsDarkMode] = React.useState(true);
@@ -57,19 +56,10 @@ export default function DashboardPage() {
       )}
     >
       {/* 1. Mobile Navigation (Header) */}
-      <MobileNav
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isConnected={isConnected}
-        handleConnect={handleConnect}
-      />
+      <MobileNav isConnected={isConnected} handleConnect={handleConnect} />
 
       {/* 2. Desktop Sidebar */}
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isConnected={isConnected}
-      />
+      <Sidebar isConnected={isConnected} />
 
       {/* 3. Main Content Area */}
       <div className="flex-1 h-full overflow-hidden flex flex-col relative">
