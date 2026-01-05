@@ -19,8 +19,11 @@ import {
   SortOption,
 } from '@/components/collection/collection-toolbar';
 import { CollectionGrid } from '@/components/collection/collection-grid';
-import { AddCardModal } from '@/components/collection/add-card-modal';
 import { AssetModal } from '@/components/dashboard/asset-modal';
+
+// UI Components
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Tabs } from '@/components/ui/tabs';
 
 const MOKI_CONTRACT = '0x47b5a7c2e4f07772696bbf8c8c32fe2b9eabd550';
 const BOOSTER_CONTRACT = '0x3a3ea46230688a20ee45ec851dc81f76371f1235';
@@ -53,27 +56,27 @@ export default function CollectionPage() {
     null
   );
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
-  const [isAddOpen, setIsAddOpen] = React.useState(false);
 
   // 1. Initial Load
-  React.useEffect(() => {
-    const loadInitialData = async () => {
-      setIsLoading(true);
-      try {
-        const [fetchedAssets, fetchedPrice] = await Promise.all([
-          fetchWalletNFTs(),
-          fetchRonPrice(),
-        ]);
-        setAssets(fetchedAssets);
-        setRonPrice(fetchedPrice);
-      } catch (e) {
-        console.error('Failed to load initial data:', e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadInitialData();
+  const loadInitialData = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [fetchedAssets, fetchedPrice] = await Promise.all([
+        fetchWalletNFTs(),
+        fetchRonPrice(),
+      ]);
+      setAssets(fetchedAssets);
+      setRonPrice(fetchedPrice);
+    } catch (e) {
+      console.error('Failed to load initial data:', e);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  React.useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   // 2. History Load
   React.useEffect(() => {
@@ -112,23 +115,19 @@ export default function CollectionPage() {
           const dateObj = new Date(timestamp);
 
           // -- DATE FORMATTING LOGIC --
-          // For X-Axis: Short date (or time for 24h view)
           let shortDate = '';
           if (timeRange === '24h') {
-            // For 24h, show Time (e.g. 14:00)
             shortDate = dateObj.toLocaleTimeString(undefined, {
               hour: 'numeric',
               minute: '2-digit',
             });
           } else {
-            // For others, show Date (e.g. Jan 5)
             shortDate = dateObj.toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
             });
           }
 
-          // For Tooltip: Full Date + Time (e.g. Jan 5, 2:00 PM)
           const fullDate = dateObj.toLocaleString(undefined, {
             month: 'short',
             day: 'numeric',
@@ -215,9 +214,9 @@ export default function CollectionPage() {
               portfolioChange24h={portfolioChange24h}
               isPrivacyMode={isPrivacyMode}
               setIsPrivacyMode={setIsPrivacyMode}
-              onRefresh={() => window.location.reload()}
+              onRefresh={loadInitialData}
               isRefreshing={isLoading}
-              timeRange={timeRange} // Pass updated time range
+              timeRange={timeRange}
             />
 
             <CollectionOverview
@@ -229,32 +228,41 @@ export default function CollectionPage() {
               isLoading={isHistoryLoading}
             />
 
-            <div className="space-y-6">
-              <CollectionToolbar
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                sortOption={sortOption}
-                setSortOption={setSortOption}
-                onAddCard={() => setIsAddOpen(true)}
-              />
-
-              {isLoading ? (
-                <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground">
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                  <p>Loading assets...</p>
-                </div>
-              ) : (
-                <CollectionGrid
-                  assets={filteredAssets}
-                  onCardClick={(asset) => {
-                    setSelectedAsset(asset);
-                    setIsDetailOpen(true);
-                  }}
-                />
-              )}
-            </div>
+            {/* Filter Toolbar & Grid wrapped in Card */}
+            <Card className="w-full">
+              <CardHeader className="pb-4">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="w-full"
+                >
+                  <CollectionToolbar
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    sortOption={sortOption}
+                    setSortOption={setSortOption}
+                    onRefresh={loadInitialData}
+                  />
+                </Tabs>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                    <p>Loading assets...</p>
+                  </div>
+                ) : (
+                  <CollectionGrid
+                    assets={filteredAssets}
+                    itemsPerPage={15}
+                    onCardClick={(asset) => {
+                      setSelectedAsset(asset);
+                      setIsDetailOpen(true);
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
 
             <Footer isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
           </div>
@@ -266,8 +274,6 @@ export default function CollectionPage() {
         onClose={setIsDetailOpen}
         asset={selectedAsset}
       />
-
-      <AddCardModal isOpen={isAddOpen} onClose={setIsAddOpen} />
     </div>
   );
 }

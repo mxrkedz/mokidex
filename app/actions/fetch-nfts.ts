@@ -10,7 +10,7 @@ export async function fetchWalletNFTs() {
   if (!apiKey) return [];
 
   const url =
-    'https://deep-index.moralis.io/api/v2.2/0x08d831f34876a2177efd9d7c3c99598168d66566/nft?chain=ronin&format=decimal&limit=25&token_addresses%5B0%5D=0x47b5a7c2e4f07772696bbf8c8c32fe2b9eabd550&token_addresses%5B1%5D=0x3a3ea46230688a20ee45ec851dc81f76371f1235&media_items=true&include_prices=true';
+    'https://deep-index.moralis.io/api/v2.2/0x466e70f677b3ebd99ff027ec13cc040f19978abc/nft?chain=ronin&format=decimal&token_addresses%5B0%5D=0x47b5a7c2e4f07772696bbf8c8c32fe2b9eabd550&token_addresses%5B1%5D=0x3a3ea46230688a20ee45ec851dc81f76371f1235&media_items=true&include_prices=true';
 
   try {
     const response = await fetch(url, {

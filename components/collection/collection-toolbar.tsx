@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { IconSearch, IconFilter, IconPlus } from '@tabler/icons-react';
+import { IconSearch, IconFilter, IconRefresh } from '@tabler/icons-react';
+import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 export type SortOption =
@@ -12,33 +13,23 @@ export type SortOption =
   | 'least-value';
 
 interface CollectionToolbarProps {
-  activeTab: string;
-  onTabChange: (val: string) => void;
   searchQuery: string;
   setSearchQuery: (val: string) => void;
   sortOption: SortOption;
   setSortOption: (val: SortOption) => void;
-  onAddCard: () => void;
+  onRefresh: () => void;
 }
 
 export function CollectionToolbar({
-  activeTab,
-  onTabChange,
   searchQuery,
   setSearchQuery,
   sortOption,
   setSortOption,
-  onAddCard,
+  onRefresh,
 }: CollectionToolbarProps) {
-  const tabs = [
-    { id: 'All', label: 'All Items' },
-    { id: 'Moki', label: 'Moki NFT' },
-    { id: 'Booster', label: 'Booster Box' },
-  ];
-
   return (
     <div className="flex flex-col gap-4">
-      {/* Top Row: Search, Sort, Add */}
+      {/* Top Row: Search, Sort, Refresh */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         {/* Left: Search & Filter */}
         <div className="flex flex-1 gap-3 w-full md:w-auto">
@@ -70,35 +61,27 @@ export function CollectionToolbar({
           </div>
         </div>
 
-        {/* Right: Add Button */}
+        {/* Right: Refresh Button */}
         <div className="flex items-center w-full md:w-auto justify-end">
           <Button
-            onClick={onAddCard}
-            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            variant="outline"
+            size="icon"
+            onClick={onRefresh}
+            className="w-9 h-9"
+            title="Refresh Collection"
           >
-            <IconPlus size={16} />
-            <span className="hidden sm:inline">Add Custom Item</span>
-            <span className="inline sm:hidden">Add</span>
+            <IconRefresh size={18} />
           </Button>
         </div>
       </div>
 
       {/* Bottom Row: Tabs */}
-      <div className="flex items-center gap-2 border-b border-border pb-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={cn(
-              'px-4 py-2 text-sm font-medium border-b-2 transition-all duration-200',
-              activeTab === tab.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/50'
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex items-center">
+        <TabsList>
+          <TabsTrigger value="All">All Items</TabsTrigger>
+          <TabsTrigger value="Moki">Moki NFT</TabsTrigger>
+          <TabsTrigger value="Booster">Booster Box</TabsTrigger>
+        </TabsList>
       </div>
     </div>
   );
