@@ -4,8 +4,9 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { fetchWalletNFTs } from '@/app/actions/fetch-nfts';
 import { fetchRonPrice } from '@/app/actions/fetch-ron-price';
-import { fetchCollectionTrades } from '@/app/actions/fetch-trades';
+import { fetchHistoricalPrices } from '@/app/actions/fetch-history';
 import { RealNFT } from '@/lib/nft-types';
+import { TimeRange } from '@/lib/types';
 
 // Layout & Components
 import { Sidebar } from '@/components/layout/sidebar';
@@ -21,7 +22,6 @@ import { CollectionGrid } from '@/components/collection/collection-grid';
 import { AddCardModal } from '@/components/collection/add-card-modal';
 import { AssetModal } from '@/components/dashboard/asset-modal';
 
-// Constants for contracts
 const MOKI_CONTRACT = '0x47b5a7c2e4f07772696bbf8c8c32fe2b9eabd550';
 const BOOSTER_CONTRACT = '0x3a3ea46230688a20ee45ec851dc81f76371f1235';
 
@@ -32,137 +32,146 @@ export default function CollectionPage() {
   // Data State
   const [assets, setAssets] = React.useState<RealNFT[]>([]);
   const [ronPrice, setRonPrice] = React.useState({ usdPrice: 0, change24h: 0 });
+
+  // Chart Data State: Now includes shortDate (X-Axis) and fullDate (Tooltip)
   const [historyData, setHistoryData] = React.useState<
-    { date: string; value: number }[]
+    { shortDate: string; fullDate: string; value: number }[]
   >([]);
+
   const [portfolioChange24h, setPortfolioChange24h] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isHistoryLoading, setIsHistoryLoading] = React.useState(false);
 
-  // Filtering & Sorting
+  // Filters & UI State
+  const [timeRange, setTimeRange] = React.useState<TimeRange>('7d');
   const [activeTab, setActiveTab] = React.useState('All');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [sortOption, setSortOption] = React.useState<SortOption>('most-value');
 
-  // Modal State
+  // Modals
   const [selectedAsset, setSelectedAsset] = React.useState<RealNFT | null>(
     null
   );
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
   const [isAddOpen, setIsAddOpen] = React.useState(false);
 
-  // --- DATA LOADING & PROCESSING ---
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      // 1. Fetch Assets and Ron Price
-      const [fetchedAssets, fetchedPrice] = await Promise.all([
-        fetchWalletNFTs(),
-        fetchRonPrice(),
-      ]);
-      setAssets(fetchedAssets);
-      setRonPrice(fetchedPrice);
+  // 1. Initial Load
+  React.useEffect(() => {
+    const loadInitialData = async () => {
+      setIsLoading(true);
+      try {
+        const [fetchedAssets, fetchedPrice] = await Promise.all([
+          fetchWalletNFTs(),
+          fetchRonPrice(),
+        ]);
+        setAssets(fetchedAssets);
+        setRonPrice(fetchedPrice);
+      } catch (e) {
+        console.error('Failed to load initial data:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadInitialData();
+  }, []);
 
-      // 2. Fetch Trades for Collections
-      const [mokiTrades, boosterTrades] = await Promise.all([
-        fetchCollectionTrades(MOKI_CONTRACT),
-        fetchCollectionTrades(BOOSTER_CONTRACT),
-      ]);
+  // 2. History Load
+  React.useEffect(() => {
+    if (assets.length === 0) return;
 
-      // 3. Calculate Counts (Assuming holding count is constant over the trade history duration)
-      const mokiCount = fetchedAssets.filter(
-        (a) => a.contractType === 'Moki'
-      ).length;
-      const boosterCount = fetchedAssets.filter(
-        (a) => a.contractType === 'Booster'
-      ).length;
+    const loadHistory = async () => {
+      setIsHistoryLoading(true);
+      try {
+        const mokiCount = assets.filter(
+          (a) => a.contractType === 'Moki'
+        ).length;
+        const boosterCount = assets.filter(
+          (a) => a.contractType === 'Booster'
+        ).length;
 
-      // 4. Construct Unified Timeline (Chart Data)
-      // Merge all timestamps
-      const allTimestamps = [
-        ...mokiTrades.map((t) => t.timestamp),
-        ...boosterTrades.map((t) => t.timestamp),
-      ].sort((a, b) => a - b);
+        const [mokiHistory, boosterHistory] = await Promise.all([
+          fetchHistoricalPrices(MOKI_CONTRACT, timeRange),
+          fetchHistoricalPrices(BOOSTER_CONTRACT, timeRange),
+        ]);
 
-      if (allTimestamps.length > 0) {
-        // Track latest known price for each asset as we walk through time
-        let lastMokiPrice = mokiTrades[0]?.price || 0;
-        let lastBoosterPrice = boosterTrades[0]?.price || 0;
+        const timestampSet = new Set<string>();
+        mokiHistory.forEach((h) => timestampSet.add(h.date));
+        boosterHistory.forEach((h) => timestampSet.add(h.date));
 
-        const timeSeries = allTimestamps.map((timestamp) => {
-          // Update prices if there's a trade at this specific timestamp
-          const mTrade = mokiTrades.find((t) => t.timestamp === timestamp);
-          const bTrade = boosterTrades.find((t) => t.timestamp === timestamp);
+        const sortedTimestamps = Array.from(timestampSet).sort(
+          (a, b) => new Date(a).getTime() - new Date(b).getTime()
+        );
 
-          if (mTrade) lastMokiPrice = mTrade.price;
-          if (bTrade) lastBoosterPrice = bTrade.price;
+        const combinedData = sortedTimestamps.map((timestamp) => {
+          const mPoint = mokiHistory.find((h) => h.date === timestamp);
+          const bPoint = boosterHistory.find((h) => h.date === timestamp);
 
-          const totalVal =
-            lastMokiPrice * mokiCount + lastBoosterPrice * boosterCount;
+          const mPrice = mPoint ? mPoint.price : 0;
+          const bPrice = bPoint ? bPoint.price : 0;
+          const totalValue = mPrice * mokiCount + bPrice * boosterCount;
+          const dateObj = new Date(timestamp);
 
-          return {
-            timestamp,
-            value: totalVal,
-            date: new Date(timestamp).toLocaleDateString(undefined, {
+          // -- DATE FORMATTING LOGIC --
+          // For X-Axis: Short date (or time for 24h view)
+          let shortDate = '';
+          if (timeRange === '24h') {
+            // For 24h, show Time (e.g. 14:00)
+            shortDate = dateObj.toLocaleTimeString(undefined, {
+              hour: 'numeric',
+              minute: '2-digit',
+            });
+          } else {
+            // For others, show Date (e.g. Jan 5)
+            shortDate = dateObj.toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
-            }),
+            });
+          }
+
+          // For Tooltip: Full Date + Time (e.g. Jan 5, 2:00 PM)
+          const fullDate = dateObj.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          });
+
+          return {
+            shortDate,
+            fullDate,
+            value: totalValue,
           };
         });
 
-        // Downsample for chart readability if too many points
-        // (Optional: simple version just takes all points or filtered by unique day)
-        setHistoryData(timeSeries);
+        const validData = combinedData.filter((d) => d.value > 0);
+        setHistoryData(validData);
 
-        // 5. Calculate 24h Portfolio Change
-        // Find current value (last point)
-        const currentVal = timeSeries[timeSeries.length - 1].value;
-
-        // Find value ~24h ago
-        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-        // Find the trade point closest to 24h ago
-        const pastPoint = timeSeries.reduce((prev, curr) =>
-          Math.abs(curr.timestamp - oneDayAgo) <
-          Math.abs(prev.timestamp - oneDayAgo)
-            ? curr
-            : prev
-        );
-
-        if (pastPoint && pastPoint.value > 0) {
-          const change =
-            ((currentVal - pastPoint.value) / pastPoint.value) * 100;
-          setPortfolioChange24h(change);
-        } else {
-          setPortfolioChange24h(0);
+        if (validData.length > 1) {
+          const start = validData[0].value;
+          const end = validData[validData.length - 1].value;
+          if (start > 0) {
+            setPortfolioChange24h(((end - start) / start) * 100);
+          }
         }
-      } else {
-        // Fallback if no trades found
-        setHistoryData([]);
-        setPortfolioChange24h(0);
+      } catch (e) {
+        console.error('Failed to load history:', e);
+      } finally {
+        setIsHistoryLoading(false);
       }
-    } catch (e) {
-      console.error('Failed to load data:', e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  React.useEffect(() => {
-    loadData();
-  }, []);
+    loadHistory();
+  }, [assets, timeRange]);
 
-  // --- CURRENT PORTFOLIO VALUE (Based on Floor/Latest from Wallet Fetch) ---
   const totalPortfolioValue = React.useMemo(() => {
     return assets.reduce((acc, curr) => acc + curr.floorPrice, 0);
   }, [assets]);
 
-  // --- FILTERED GRID DATA ---
   const filteredAssets = React.useMemo(() => {
     let result = [...assets];
-
     if (activeTab !== 'All') {
       result = result.filter((asset) => asset.contractType === activeTab);
     }
-
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -170,7 +179,6 @@ export default function CollectionPage() {
           asset.name.toLowerCase().includes(q) || asset.tokenId.includes(q)
       );
     }
-
     result.sort((a, b) => {
       switch (sortOption) {
         case 'most-value':
@@ -185,7 +193,6 @@ export default function CollectionPage() {
           return 0;
       }
     });
-
     return result;
   }, [assets, activeTab, searchQuery, sortOption]);
 
@@ -202,22 +209,24 @@ export default function CollectionPage() {
       <div className="flex-1 h-full overflow-hidden flex flex-col relative">
         <main className="flex-1 p-4 md:p-8 overflow-y-auto scroll-smooth">
           <div className="max-w-7xl mx-auto space-y-8 pb-4">
-            {/* Header: Uses Real 24h Change Logic */}
             <CollectionHeader
               totalRonValue={totalPortfolioValue}
               ronPriceUsd={ronPrice.usdPrice}
               portfolioChange24h={portfolioChange24h}
               isPrivacyMode={isPrivacyMode}
               setIsPrivacyMode={setIsPrivacyMode}
-              onRefresh={loadData}
+              onRefresh={() => window.location.reload()}
               isRefreshing={isLoading}
+              timeRange={timeRange} // Pass updated time range
             />
 
-            {/* Overview: Uses Real Chart History */}
             <CollectionOverview
               isPrivacyMode={isPrivacyMode}
               assets={assets}
               historyData={historyData}
+              timeRange={timeRange}
+              setTimeRange={setTimeRange}
+              isLoading={isHistoryLoading}
             />
 
             <div className="space-y-6">
@@ -234,7 +243,7 @@ export default function CollectionPage() {
               {isLoading ? (
                 <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground">
                   <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                  <p>Updating portfolio data...</p>
+                  <p>Loading assets...</p>
                 </div>
               ) : (
                 <CollectionGrid

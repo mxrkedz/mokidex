@@ -11,15 +11,17 @@ import {
   IconTrendingDown,
 } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
+import { TimeRange } from '@/lib/types'; // Import TimeRange type
 
 interface CollectionHeaderProps {
   totalRonValue: number;
   ronPriceUsd: number;
-  portfolioChange24h: number; // Renamed to clarify it's PORTFOLIO change
+  portfolioChange24h: number;
   isPrivacyMode: boolean;
   setIsPrivacyMode: (val: boolean) => void;
-  onRefresh: () => void; // Added refresh handler
-  isRefreshing: boolean; // Added loading state for button
+  onRefresh: () => void;
+  isRefreshing: boolean;
+  timeRange: TimeRange; // Added prop
 }
 
 export function CollectionHeader({
@@ -30,6 +32,7 @@ export function CollectionHeader({
   setIsPrivacyMode,
   onRefresh,
   isRefreshing,
+  timeRange, // Destructure new prop
 }: CollectionHeaderProps) {
   const isPositive = portfolioChange24h >= 0;
 
@@ -93,7 +96,10 @@ export function CollectionHeader({
                 ) : (
                   <IconTrendingDown size={16} className="mr-1" />
                 )}
-                <span>{Math.abs(portfolioChange24h).toFixed(2)}% (24h)</span>
+                {/* Dynamically show the time range label */}
+                <span>
+                  {Math.abs(portfolioChange24h).toFixed(2)}% ({timeRange})
+                </span>
               </div>
             </div>
           )}

@@ -8,36 +8,38 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-} from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartConfig,
 } from '@/components/ui/chart';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IconCards, IconPackage } from '@tabler/icons-react';
 import { RealNFT } from '@/lib/nft-types';
+import { TimeRange } from '@/lib/types';
 
 const chartConfig = {
   value: { label: 'Value (RON)', color: '#2563eb' },
-};
+} satisfies ChartConfig;
 
 interface CollectionOverviewProps {
   isPrivacyMode: boolean;
   assets: RealNFT[];
-  historyData: { date: string; value: number }[]; // New Prop
+  historyData: { shortDate: string; fullDate: string; value: number }[]; // Updated Interface
+  timeRange: TimeRange;
+  setTimeRange: (range: TimeRange) => void;
+  isLoading?: boolean;
 }
 
 export function CollectionOverview({
   isPrivacyMode,
   assets,
   historyData,
+  timeRange,
+  setTimeRange,
+  isLoading,
 }: CollectionOverviewProps) {
   // Calculate Counts
   const mokiCount = assets.filter((a) => a.contractType === 'Moki').length;
@@ -66,12 +68,12 @@ export function CollectionOverview({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* LEFT: Inventory Status */}
-      <Card className="lg:col-span-1 h-full">
+      <Card className="lg:col-span-1 h-full flex flex-col">
         <CardHeader>
           <CardTitle>Inventory Status</CardTitle>
           <CardDescription>Asset distribution</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 flex-1">
           {statsItems.map((item) => (
             <div
               key={item.label}
@@ -118,13 +120,33 @@ export function CollectionOverview({
 
       {/* RIGHT: Portfolio History Chart */}
       <Card className="lg:col-span-2 flex flex-col">
-        <CardHeader className="pb-4">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
           <div className="space-y-1">
             <CardTitle>Portfolio History</CardTitle>
             <CardDescription>
-              Value based on recent trade history (RON)
+              {isLoading ? 'Updating data...' : 'Value fluctuation (RON)'}
             </CardDescription>
           </div>
+          <Tabs
+            value={timeRange}
+            onValueChange={(val) => setTimeRange(val as TimeRange)}
+            className="w-full sm:w-auto"
+          >
+            <TabsList className="grid w-full grid-cols-4 sm:w-64 h-8">
+              <TabsTrigger value="24h" className="text-xs">
+                24h
+              </TabsTrigger>
+              <TabsTrigger value="7d" className="text-xs">
+                7d
+              </TabsTrigger>
+              <TabsTrigger value="30d" className="text-xs">
+                30d
+              </TabsTrigger>
+              <TabsTrigger value="All" className="text-xs">
+                All
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
 
         <CardContent className="pl-0 pb-0 flex-1 min-h-[300px]">
@@ -138,13 +160,7 @@ export function CollectionOverview({
               margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
             >
               <defs>
-                <linearGradient
-                  id="fillValueCollection"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
+                <linearGradient id="fillValue" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
                     stopColor="var(--color-value)"
@@ -163,8 +179,9 @@ export function CollectionOverview({
                 className="stroke-muted"
               />
 
+              {/* X-Axis uses shortDate (Date only for >24h, Time for 24h) */}
               <XAxis
-                dataKey="date"
+                dataKey="shortDate"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
@@ -184,16 +201,31 @@ export function CollectionOverview({
                 domain={['auto', 'auto']}
               />
 
+              {/* Tooltip customized to show 'fullDate'. 
+                We use labelFormatter to override the header of the tooltip.
+                (payload[0] gives access to the data point hovered)
+              */}
               <ChartTooltip
                 cursor={false}
-                content={<ChartTooltipContent indicator="dot" hideLabel />}
+                content={
+                  <ChartTooltipContent
+                    indicator="dot"
+                    hideLabel
+                    labelFormatter={(value, payload) => {
+                      if (payload && payload.length > 0) {
+                        return payload[0].payload.fullDate;
+                      }
+                      return value;
+                    }}
+                  />
+                }
               />
 
               <Area
                 dataKey="value"
                 type="monotone"
                 animationDuration={1500}
-                fill="url(#fillValueCollection)"
+                fill="url(#fillValue)"
                 fillOpacity={1}
                 stroke="var(--color-value)"
                 strokeWidth={2}
