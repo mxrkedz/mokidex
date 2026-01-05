@@ -213,9 +213,17 @@ export const SHORT_ADDRESS = `${SUPPORT_ADDRESS.slice(
   6
 )}...${SUPPORT_ADDRESS.slice(-4)}`;
 
-export const ALL_MOCK_ASSETS: MokuAsset[] = Array.from({ length: 48 }).map(
+export const ALL_MOCK_ASSETS: MokuAsset[] = Array.from({ length: 64 }).map(
   (_, i) => {
-    const types: CardType[] = ['Moki', 'Scheme', 'Promo'];
+    // Expanded types list
+    const types: CardType[] = [
+      'Moki',
+      'Scheme',
+      'Promo',
+      'Booster Box',
+      'Pack',
+      'Moku NFT',
+    ];
     const rarities: Rarity[] = [
       'Common',
       'Uncommon',
@@ -230,16 +238,16 @@ export const ALL_MOCK_ASSETS: MokuAsset[] = Array.from({ length: 48 }).map(
 
     return {
       id: `asset-${1000 + i}`,
-      name: `Moku Card #${1000 + i}`,
+      name: `Moku Asset #${1000 + i}`,
       rarity: rarities[rarityIndex],
       type: types[typeIndex],
       floorPriceRon: Math.floor(Math.random() * 500) + 10,
       stars: Math.floor(Math.random() * 5) + 1,
       color: colors[rarityIndex],
-      description: 'Generated mock card for collection view testing.',
+      description: 'Generated mock asset for collection view.',
       stats: [
         { label: 'Power', value: String(Math.floor(Math.random() * 100) + 50) },
-        { label: 'Speed', value: String(Math.floor(Math.random() * 10)) },
+        { label: 'Type', value: types[typeIndex] },
       ],
     };
   }

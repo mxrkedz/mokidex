@@ -1,5 +1,11 @@
 export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
-export type CardType = 'Moki' | 'Scheme' | 'Promo';
+export type CardType =
+  | 'Moki'
+  | 'Scheme'
+  | 'Promo'
+  | 'Booster Box'
+  | 'Pack'
+  | 'Moku NFT';
 export type TimeRange = '24h' | '7d' | '30d' | 'All';
 
 export interface MokuAsset {

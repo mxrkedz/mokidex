@@ -10,22 +10,37 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { Footer } from '@/components/layout/footer';
 
-// Collection Components
+// Components
 import { CollectionHeader } from '@/components/collection/collection-header';
 import { CollectionOverview } from '@/components/collection/collection-overview';
-import { CollectionToolbar } from '@/components/collection/collection-toolbar';
+import {
+  CollectionToolbar,
+  AssetCategory,
+} from '@/components/collection/collection-toolbar';
 import { CollectionGrid } from '@/components/collection/collection-grid';
 import { AddCardModal } from '@/components/collection/add-card-modal';
 import { AssetModal } from '@/components/dashboard/asset-modal';
 
+// UI
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+
 export default function CollectionPage() {
+  const [activeTab, setActiveTab] = React.useState('Collection');
   const [isConnected, setIsConnected] = React.useState(false);
   const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
   const [isDarkMode, setIsDarkMode] = React.useState(true);
 
-  // Filter State (Removed showUnowned)
+  // Filter State
   const [searchQuery, setSearchQuery] = React.useState('');
   const [rarityFilter, setRarityFilter] = React.useState<Rarity | 'All'>('All');
+  const [assetCategory, setAssetCategory] =
+    React.useState<AssetCategory>('All');
 
   // Modal State
   const [selectedAsset, setSelectedAsset] = React.useState<MokuAsset | null>(
@@ -36,17 +51,34 @@ export default function CollectionPage() {
 
   const handleConnect = () => setIsConnected(true);
 
-  // Filter Logic (Simplified)
+  // Filter Logic
   const filteredAssets = React.useMemo(() => {
     return ALL_MOCK_ASSETS.filter((asset) => {
+      // 1. Text Search
       const matchesSearch = asset.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
+
+      // 2. Rarity Filter
       const matchesRarity =
         rarityFilter === 'All' || asset.rarity === rarityFilter;
-      return matchesSearch && matchesRarity;
+
+      // 3. Asset Category Filter
+      let matchesCategory = true;
+      if (assetCategory === 'Cards') {
+        // "Cards" usually implies playable cards like Moki, Schemes, Promo
+        matchesCategory = ['Moki', 'Scheme', 'Promo'].includes(asset.type);
+      } else if (assetCategory === 'Booster Box') {
+        matchesCategory = asset.type === 'Booster Box';
+      } else if (assetCategory === 'Packs') {
+        matchesCategory = asset.type === 'Pack';
+      } else if (assetCategory === 'Moku NFT') {
+        matchesCategory = asset.type === 'Moku NFT';
+      }
+
+      return matchesSearch && matchesRarity && matchesCategory;
     });
-  }, [searchQuery, rarityFilter]);
+  }, [searchQuery, rarityFilter, assetCategory]);
 
   // Calculate Total Value
   const totalValue = React.useMemo(() => {
@@ -73,27 +105,42 @@ export default function CollectionPage() {
               setIsPrivacyMode={setIsPrivacyMode}
             />
 
-            {/* 2. Middle Section: Stats & Chart */}
+            {/* 2. Overview Section (Stats & Graphs) */}
             <CollectionOverview isPrivacyMode={isPrivacyMode} />
 
-            {/* 3. Bottom Section: Toolbar & Grid */}
-            <div className="space-y-6">
-              <CollectionToolbar
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                rarityFilter={rarityFilter}
-                setRarityFilter={setRarityFilter}
-                onAddCard={() => setIsAddOpen(true)}
-              />
+            {/* 3. Main Content Area (Wrapped in Card as requested) */}
+            <Card className="border-border bg-card">
+              <CardHeader className="border-b border-border pb-6">
+                <div className="flex flex-col gap-1">
+                  <CardTitle>Inventory</CardTitle>
+                  <CardDescription>
+                    Manage and view your entire collection
+                  </CardDescription>
+                </div>
+              </CardHeader>
 
-              <CollectionGrid
-                assets={filteredAssets}
-                onCardClick={(asset) => {
-                  setSelectedAsset(asset);
-                  setIsDetailOpen(true);
-                }}
-              />
-            </div>
+              <CardContent className="p-6 space-y-8">
+                {/* Filters */}
+                <CollectionToolbar
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  rarityFilter={rarityFilter}
+                  setRarityFilter={setRarityFilter}
+                  assetCategory={assetCategory}
+                  setAssetCategory={setAssetCategory}
+                  onAddCard={() => setIsAddOpen(true)}
+                />
+
+                {/* Grid */}
+                <CollectionGrid
+                  assets={filteredAssets}
+                  onCardClick={(asset) => {
+                    setSelectedAsset(asset);
+                    setIsDetailOpen(true);
+                  }}
+                />
+              </CardContent>
+            </Card>
 
             <Footer isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
           </div>
