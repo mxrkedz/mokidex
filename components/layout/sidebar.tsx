@@ -5,14 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { IconPin, IconUser } from '@tabler/icons-react';
+import { IconPin } from '@tabler/icons-react';
 import { NAV_ITEMS } from '@/lib/constants';
 
-interface SidebarProps {
-  isConnected: boolean;
-}
+// Removed SidebarProps interface
 
-export function Sidebar({ isConnected }: SidebarProps) {
+export function Sidebar() {
   const [isPinned, setIsPinned] = React.useState(true);
   const pathname = usePathname();
 
@@ -44,7 +42,7 @@ export function Sidebar({ isConnected }: SidebarProps) {
             isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           )}
         >
-          MokuDex
+          MokiDex
         </h1>
 
         <Button
@@ -66,7 +64,6 @@ export function Sidebar({ isConnected }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 space-y-1">
         {NAV_ITEMS.map((item) => {
-          // Check if link is active
           const isActive = pathname === item.href;
 
           return (
@@ -102,47 +99,6 @@ export function Sidebar({ isConnected }: SidebarProps) {
           );
         })}
       </nav>
-
-      {/* User Section */}
-      <div className="mt-auto pt-2 border-t border-border">
-        <div className="flex items-center h-12 rounded-md hover:bg-card/50 cursor-pointer transition-all duration-300 relative overflow-hidden">
-          <div
-            className={cn(
-              'w-full flex items-center justify-center shrink-0 transition-all duration-300',
-              isPinned ? 'w-10' : 'group-hover:w-10'
-            )}
-          >
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border border-border shrink-0">
-              <IconUser className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              'flex flex-col overflow-hidden transition-opacity duration-300 absolute left-10 w-[calc(100%-2.5rem)]',
-              isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            )}
-          >
-            {isConnected ? (
-              <>
-                <span className="text-sm font-medium truncate">
-                  Ronin Wallet
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-[10px] text-muted-foreground leading-none">
-                    Connected
-                  </span>
-                </div>
-              </>
-            ) : (
-              <span className="text-sm font-medium truncate text-muted-foreground">
-                Guest User
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }

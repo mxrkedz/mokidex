@@ -20,10 +20,13 @@ import {
 } from '@/components/collection/collection-toolbar';
 import { CollectionGrid } from '@/components/collection/collection-grid';
 import { AssetModal } from '@/components/dashboard/asset-modal';
+import { ImportWalletModal } from '@/components/collection/import-wallet-modal';
 
 // UI Components
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Tabs } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { IconWallet, IconDownload } from '@tabler/icons-react';
 
 const MOKI_CONTRACT = '0x47b5a7c2e4f07772696bbf8c8c32fe2b9eabd550';
 const BOOSTER_CONTRACT = '0x3a3ea46230688a20ee45ec851dc81f76371f1235';
@@ -36,20 +39,27 @@ export default function CollectionPage() {
   const [assets, setAssets] = React.useState<RealNFT[]>([]);
   const [ronPrice, setRonPrice] = React.useState({ usdPrice: 0, change24h: 0 });
 
-  // Chart Data State: Now includes shortDate (X-Axis) and fullDate (Tooltip)
+  // Wallet & Auth State
+  const [walletAddress, setWalletAddress] = React.useState('');
+  const [portfolioName, setPortfolioName] = React.useState('');
+  const [isAuthChecking, setIsAuthChecking] = React.useState(true);
+  const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
+
+  // Chart Data State
   const [historyData, setHistoryData] = React.useState<
     { shortDate: string; fullDate: string; value: number }[]
   >([]);
 
   const [portfolioChange24h, setPortfolioChange24h] = React.useState(0);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [isHistoryLoading, setIsHistoryLoading] = React.useState(false);
 
   // Filters & UI State
   const [timeRange, setTimeRange] = React.useState<TimeRange>('7d');
   const [activeTab, setActiveTab] = React.useState('All');
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [sortOption, setSortOption] = React.useState<SortOption>('most-value');
+  const [sortOption, setSortOption] =
+    React.useState<SortOption>('Highest Value');
 
   // Modals
   const [selectedAsset, setSelectedAsset] = React.useState<RealNFT | null>(
@@ -57,12 +67,30 @@ export default function CollectionPage() {
   );
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
 
-  // 1. Initial Load
+  // 1. Check Local Storage on Mount
+  React.useEffect(() => {
+    const savedAddress = localStorage.getItem('userWalletAddress');
+    const savedName = localStorage.getItem('userPortfolioName');
+
+    if (savedAddress) setWalletAddress(savedAddress);
+    if (savedName) setPortfolioName(savedName);
+
+    setIsAuthChecking(false);
+  }, []);
+
+  const handleUpdateName = (name: string) => {
+    setPortfolioName(name);
+    localStorage.setItem('userPortfolioName', name);
+  };
+
+  // 2. Initial Load Data
   const loadInitialData = React.useCallback(async () => {
+    if (!walletAddress) return;
+
     setIsLoading(true);
     try {
       const [fetchedAssets, fetchedPrice] = await Promise.all([
-        fetchWalletNFTs(),
+        fetchWalletNFTs(walletAddress),
         fetchRonPrice(),
       ]);
       setAssets(fetchedAssets);
@@ -72,13 +100,22 @@ export default function CollectionPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [walletAddress]);
 
   React.useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
+    if (walletAddress) {
+      loadInitialData();
+    }
+  }, [loadInitialData, walletAddress]);
 
-  // 2. History Load
+  const handleImportWallet = (newAddress: string) => {
+    localStorage.setItem('userWalletAddress', newAddress);
+    setWalletAddress(newAddress);
+    setPortfolioName('');
+    localStorage.removeItem('userPortfolioName');
+  };
+
+  // 3. History Load
   React.useEffect(() => {
     if (assets.length === 0) return;
 
@@ -114,7 +151,6 @@ export default function CollectionPage() {
           const totalValue = mPrice * mokiCount + bPrice * boosterCount;
           const dateObj = new Date(timestamp);
 
-          // -- DATE FORMATTING LOGIC --
           let shortDate = '';
           if (timeRange === '24h') {
             shortDate = dateObj.toLocaleTimeString(undefined, {
@@ -180,14 +216,10 @@ export default function CollectionPage() {
     }
     result.sort((a, b) => {
       switch (sortOption) {
-        case 'most-value':
+        case 'Highest Value':
           return b.floorPrice - a.floorPrice;
-        case 'least-value':
+        case 'Lowest Value':
           return a.floorPrice - b.floorPrice;
-        case 'most-rare':
-          return (a.rarityRank || 999999) - (b.rarityRank || 999999);
-        case 'least-rare':
-          return (b.rarityRank || 999999) - (a.rarityRank || 999999);
         default:
           return 0;
       }
@@ -202,67 +234,108 @@ export default function CollectionPage() {
         isDarkMode ? 'dark' : ''
       )}
     >
-      <MobileNav isConnected={true} handleConnect={() => {}} />
-      <Sidebar isConnected={true} />
+      {/* Updated: Removed Props */}
+      <MobileNav />
+      <Sidebar />
 
       <div className="flex-1 h-full overflow-hidden flex flex-col relative">
         <main className="flex-1 p-4 md:p-8 overflow-y-auto scroll-smooth">
-          <div className="max-w-7xl mx-auto space-y-8 pb-4">
-            <CollectionHeader
-              totalRonValue={totalPortfolioValue}
-              ronPriceUsd={ronPrice.usdPrice}
-              portfolioChange24h={portfolioChange24h}
-              isPrivacyMode={isPrivacyMode}
-              setIsPrivacyMode={setIsPrivacyMode}
-              onRefresh={loadInitialData}
-              isRefreshing={isLoading}
-              timeRange={timeRange}
-            />
-
-            <CollectionOverview
-              isPrivacyMode={isPrivacyMode}
-              assets={assets}
-              historyData={historyData}
-              timeRange={timeRange}
-              setTimeRange={setTimeRange}
-              isLoading={isHistoryLoading}
-            />
-
-            {/* Filter Toolbar & Grid wrapped in Card */}
-            <Card className="w-full">
-              <CardHeader className="pb-4">
-                <Tabs
-                  value={activeTab}
-                  onValueChange={setActiveTab}
-                  className="w-full"
+          <div className="max-w-7xl mx-auto space-y-8 pb-4 h-full">
+            {isAuthChecking ? (
+              <div className="flex h-[50vh] items-center justify-center">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : !walletAddress ? (
+              <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-6 animate-in fade-in zoom-in duration-500">
+                <div className="bg-primary/10 p-6 rounded-full">
+                  <IconWallet className="w-16 h-16 text-primary" />
+                </div>
+                <div className="space-y-2 max-w-md">
+                  <h2 className="text-2xl font-bold">Track Your Portfolio</h2>
+                  <p className="text-muted-foreground">
+                    Import your Ronin wallet address to view your Moki
+                    collection.
+                  </p>
+                </div>
+                <Button
+                  size="lg"
+                  className="gap-2"
+                  onClick={() => setIsImportModalOpen(true)}
                 >
-                  <CollectionToolbar
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    sortOption={sortOption}
-                    setSortOption={setSortOption}
-                    onRefresh={loadInitialData}
-                  />
-                </Tabs>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground">
-                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                    <p>Loading assets...</p>
-                  </div>
-                ) : (
-                  <CollectionGrid
-                    assets={filteredAssets}
-                    itemsPerPage={15}
-                    onCardClick={(asset) => {
-                      setSelectedAsset(asset);
-                      setIsDetailOpen(true);
-                    }}
-                  />
-                )}
-              </CardContent>
-            </Card>
+                  <IconDownload className="w-5 h-5" />
+                  Import Wallet
+                </Button>
+              </div>
+            ) : (
+              <>
+                <CollectionHeader
+                  totalRonValue={totalPortfolioValue}
+                  ronPriceUsd={ronPrice.usdPrice}
+                  portfolioChange24h={portfolioChange24h}
+                  isPrivacyMode={isPrivacyMode}
+                  setIsPrivacyMode={setIsPrivacyMode}
+                  onRefresh={loadInitialData}
+                  isRefreshing={isLoading}
+                  timeRange={timeRange}
+                  onImportWallet={() => setIsImportModalOpen(true)}
+                  walletAddress={walletAddress}
+                  portfolioName={portfolioName}
+                  onUpdateName={handleUpdateName}
+                />
+
+                <CollectionOverview
+                  isPrivacyMode={isPrivacyMode}
+                  assets={assets}
+                  historyData={historyData}
+                  timeRange={timeRange}
+                  setTimeRange={setTimeRange}
+                  isLoading={isHistoryLoading}
+                />
+
+                <Card className="w-full">
+                  <CardHeader className="pb-4">
+                    <Tabs
+                      value={activeTab}
+                      onValueChange={setActiveTab}
+                      className="w-full"
+                    >
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                        <TabsList>
+                          <TabsTrigger value="All">All Items</TabsTrigger>
+                          <TabsTrigger value="Moki">Moki</TabsTrigger>
+                          <TabsTrigger value="Booster">Booster</TabsTrigger>
+                        </TabsList>
+
+                        <CollectionToolbar
+                          searchQuery={searchQuery}
+                          setSearchQuery={setSearchQuery}
+                          sortOption={sortOption}
+                          setSortOption={setSortOption}
+                        />
+                      </div>
+                    </Tabs>
+                  </CardHeader>
+
+                  <CardContent>
+                    {isLoading ? (
+                      <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground">
+                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                        <p>Loading assets...</p>
+                      </div>
+                    ) : (
+                      <CollectionGrid
+                        assets={filteredAssets}
+                        itemsPerPage={15}
+                        onCardClick={(asset) => {
+                          setSelectedAsset(asset);
+                          setIsDetailOpen(true);
+                        }}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
             <Footer isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
           </div>
@@ -273,6 +346,14 @@ export default function CollectionPage() {
         isOpen={isDetailOpen}
         onClose={setIsDetailOpen}
         asset={selectedAsset}
+        isDarkMode={isDarkMode}
+      />
+
+      <ImportWalletModal
+        isOpen={isImportModalOpen}
+        onClose={setIsImportModalOpen}
+        onImport={handleImportWallet}
+        isDarkMode={isDarkMode}
       />
     </div>
   );

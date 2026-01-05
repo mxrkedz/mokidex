@@ -1,5 +1,6 @@
 'use client';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import Image from 'next/image'; // Import Next.js Image component
 import { RealNFT } from '@/lib/nft-types';
 
 // Helper to assign colors based on the contract type since real data doesn't have a 'color' field
@@ -79,10 +80,12 @@ export const ThreeDCard = ({ asset }: { asset: RealNFT }) => {
             {/* Image Container */}
             <div className="relative w-40 h-40 my-auto z-10 transform transition-transform duration-500 group-hover:scale-110">
               {asset.image ? (
-                <img
+                <Image
                   src={asset.image}
                   alt={asset.name}
-                  className="w-full h-full object-contain drop-shadow-2xl"
+                  fill
+                  className="object-contain drop-shadow-2xl"
+                  sizes="(max-width: 768px) 100vw, 160px"
                 />
               ) : (
                 <div className="w-full h-full bg-white/10 rounded-full flex items-center justify-center">

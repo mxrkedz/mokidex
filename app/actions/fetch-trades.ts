@@ -5,6 +5,14 @@ interface TradeData {
   timestamp: number; // Unix ms
 }
 
+// Define the interface for the raw Moralis trade object
+interface MoralisTrade {
+  price: string;
+  price_formatted?: string;
+  block_timestamp: string;
+  // Add other fields if you need them later (e.g., token_ids, transaction_hash)
+}
+
 export async function fetchCollectionTrades(
   contractAddress: string
 ): Promise<TradeData[]> {
@@ -36,8 +44,9 @@ export async function fetchCollectionTrades(
     if (!data.result || !Array.isArray(data.result)) return [];
 
     // Map to simple { price, timestamp } format
+    // Replace 'any' with the 'MoralisTrade' interface
     return data.result
-      .map((trade: any) => ({
+      .map((trade: MoralisTrade) => ({
         // Use formatted price if available, otherwise raw / 1e18
         price: trade.price_formatted
           ? parseFloat(trade.price_formatted)

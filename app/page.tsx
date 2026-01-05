@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { MokuAsset } from '@/lib/types';
+import { RealNFT } from '@/lib/nft-types'; // Import RealNFT type
 
 // --- Layout Components ---
 import { Sidebar } from '@/components/layout/sidebar';
@@ -27,6 +28,31 @@ import {
   IconBox,
   IconTrophy,
 } from '@tabler/icons-react';
+
+// Helper to convert mock MokuAsset to RealNFT structure for the shared Modal
+const convertToRealNFT = (asset: MokuAsset): RealNFT => {
+  return {
+    id: asset.id,
+    tokenId: asset.id.split('-')[1] || '0', // Extract ID number
+    name: asset.name,
+    description: asset.description,
+    image: '', // Mock assets don't have real images in this demo
+    contractType: asset.type === 'Booster Box' ? 'Booster' : 'Moki',
+    type: asset.type === 'Booster Box' ? 'Booster Box' : 'Moki NFT',
+    rarity: asset.rarity,
+    rarityLabel: asset.rarity,
+    rarityRank: 0,
+    floorPrice: asset.floorPriceRon,
+    change24h: 0,
+    lastSale: 0,
+    attributes: asset.stats.map((s) => ({
+      trait_type: s.label,
+      value: s.value,
+    })),
+    contractAddress: '0xMock...',
+    color: asset.color,
+  };
+};
 
 export default function DashboardPage() {
   // Global State
@@ -55,11 +81,11 @@ export default function DashboardPage() {
         isDarkMode ? 'dark' : ''
       )}
     >
-      {/* 1. Mobile Navigation (Header) */}
-      <MobileNav isConnected={isConnected} handleConnect={handleConnect} />
+      {/* 1. Mobile Navigation (Header) - Removed unused props */}
+      <MobileNav />
 
-      {/* 2. Desktop Sidebar */}
-      <Sidebar isConnected={isConnected} />
+      {/* 2. Desktop Sidebar - Removed unused props */}
+      <Sidebar />
 
       {/* 3. Main Content Area */}
       <div className="flex-1 h-full overflow-hidden flex flex-col relative">
@@ -146,7 +172,10 @@ export default function DashboardPage() {
       <AssetModal
         isOpen={isModalOpen}
         onClose={setIsModalOpen}
-        asset={selectedAsset}
+        // Convert mock asset to RealNFT structure
+        asset={selectedAsset ? convertToRealNFT(selectedAsset) : null}
+        // Pass isDarkMode prop
+        isDarkMode={isDarkMode}
       />
     </div>
   );

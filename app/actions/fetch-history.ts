@@ -5,6 +5,14 @@ export interface HistoryPoint {
   price: number;
 }
 
+// Define the interface for the raw API response item
+interface MoralisHistoryItem {
+  floor_price: string;
+  price_currency: string;
+  timestamp: string;
+  block_number?: string;
+}
+
 export async function fetchHistoricalPrices(
   contractAddress: string,
   range: string
@@ -13,7 +21,6 @@ export async function fetchHistoricalPrices(
   if (!apiKey) return [];
 
   // Map UI TimeRange to Moralis 'interval' parameter
-  // Moralis docs: interval can be '1d', '7d', '30d', '90d', 'all', etc.
   let apiParam = '7d';
   switch (range) {
     case '24h':
@@ -53,10 +60,11 @@ export async function fetchHistoricalPrices(
     if (!data.result || !Array.isArray(data.result)) return [];
 
     // Map and reverse (Oldest -> Newest)
+    // Use the MoralisHistoryItem interface instead of 'any'
     return data.result
-      .map((item: any) => ({
+      .map((item: MoralisHistoryItem) => ({
         price: parseFloat(item.floor_price) || 0,
-        date: item.timestamp, // Keep raw ISO string for sorting/matching
+        date: item.timestamp,
       }))
       .reverse();
   } catch (e) {

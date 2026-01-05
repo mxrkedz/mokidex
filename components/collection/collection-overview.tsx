@@ -16,7 +16,7 @@ import {
   ChartConfig,
 } from '@/components/ui/chart';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { IconCards, IconPackage } from '@tabler/icons-react';
+import { IconCircleX, IconPackage } from '@tabler/icons-react';
 import { RealNFT } from '@/lib/nft-types';
 import { TimeRange } from '@/lib/types';
 
@@ -52,17 +52,18 @@ export function CollectionOverview({
     {
       label: 'Moki NFT',
       count: mokiCount,
-      icon: IconCards,
-      color: 'text-green-500',
-      bg: 'bg-green-500/10',
+      icon: IconCircleX,
+      color: 'text-yellow-400',
+      bg: 'bg-yellow-400/10',
     },
     {
       label: 'Booster Box',
       count: boosterCount,
       icon: IconPackage,
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10',
+      color: 'text-purple-400',
+      bg: 'bg-purple-400/10',
     },
+    
   ];
 
   return (
@@ -98,7 +99,7 @@ export function CollectionOverview({
             </div>
             <div className="w-full bg-muted rounded-full h-2 overflow-hidden flex">
               <div
-                className="bg-green-500 h-full transition-all duration-500"
+                className="bg-yellow-400 h-full transition-all duration-500"
                 style={{
                   width: `${
                     totalCount > 0 ? (mokiCount / totalCount) * 100 : 0
@@ -106,7 +107,7 @@ export function CollectionOverview({
                 }}
               />
               <div
-                className="bg-purple-500 h-full transition-all duration-500"
+                className="bg-purple-400 h-full transition-all duration-500"
                 style={{
                   width: `${
                     totalCount > 0 ? (boosterCount / totalCount) * 100 : 0

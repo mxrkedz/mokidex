@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image'; // Import Next.js Image component
 import { RealNFT } from '@/lib/nft-types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,9 +46,9 @@ export function CollectionGrid({
   if (assets.length === 0) {
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border rounded-xl bg-card/50">
-        <p>No cards found.</p>
+        <p>No Assets Found.</p>
         <span className="text-xs mt-1">
-          Try adjusting your filters or connecting wallet.
+          Try adjusting your filters or importing a wallet.
         </span>
       </div>
     );
@@ -70,19 +71,18 @@ export function CollectionGrid({
               {/* Image Container */}
               <div className="aspect-square w-full bg-muted relative">
                 {asset.image ? (
-                  <img
+                  <Image
                     src={asset.image}
                     alt={asset.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
-                    loading="lazy"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover/card:scale-105"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 font-bold text-4xl uppercase tracking-widest select-none">
                     {asset.rarity ? asset.rarity[0] : '?'}
                   </div>
                 )}
-
-                {/* REMOVED: Rarity/Status Dot */}
               </div>
 
               {/* Content Area */}

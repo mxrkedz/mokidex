@@ -2,16 +2,20 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input'; // Ensure you have this component or use standard input
 import {
   IconEye,
   IconEyeOff,
   IconRefresh,
-  IconPlus,
+  IconWallet,
   IconTrendingUp,
   IconTrendingDown,
+  IconPencil,
+  IconCheck,
+  IconX,
 } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
-import { TimeRange } from '@/lib/types'; // Import TimeRange type
+import { TimeRange } from '@/lib/types';
 
 interface CollectionHeaderProps {
   totalRonValue: number;
@@ -21,7 +25,11 @@ interface CollectionHeaderProps {
   setIsPrivacyMode: (val: boolean) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
-  timeRange: TimeRange; // Added prop
+  timeRange: TimeRange;
+  onImportWallet: () => void;
+  walletAddress: string; // New prop
+  portfolioName: string; // New prop
+  onUpdateName: (name: string) => void; // New prop
 }
 
 export function CollectionHeader({
@@ -32,13 +40,51 @@ export function CollectionHeader({
   setIsPrivacyMode,
   onRefresh,
   isRefreshing,
-  timeRange, // Destructure new prop
+  timeRange,
+  onImportWallet,
+  walletAddress,
+  portfolioName,
+  onUpdateName,
 }: CollectionHeaderProps) {
   const isPositive = portfolioChange24h >= 0;
-
   const totalUsdValue = totalRonValue * ronPriceUsd;
 
-  // Formatting: "1,234.56" -> ["1,234", ".56"]
+  // -- Edit Name Logic --
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [tempName, setTempName] = React.useState('');
+
+  // Default name if no custom name is set
+  const defaultName = walletAddress
+    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} Portfolio`
+    : 'My Portfolio';
+
+  const displayName = portfolioName || defaultName;
+
+  const handleStartEdit = () => {
+    setTempName(portfolioName || defaultName);
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    if (tempName.trim()) {
+      onUpdateName(tempName.trim());
+    } else {
+      // If user clears input, revert to default (empty string)
+      onUpdateName('');
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSave();
+    if (e.key === 'Escape') handleCancel();
+  };
+  // --------------------
+
   const formatValue = (val: number) => {
     const str = val.toLocaleString(undefined, {
       minimumFractionDigits: 2,
@@ -54,9 +100,50 @@ export function CollectionHeader({
   return (
     <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6">
       <div className="flex flex-col items-start min-w-[140px]">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-          Main Portfolio
-        </span>
+        {/* Editable Label Section */}
+        <div className="h-8 flex items-center mb-1">
+          {isEditing ? (
+            <div className="flex items-center gap-1 animate-in fade-in duration-200">
+              <Input
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="h-7 w-[200px] text-xs font-semibold uppercase tracking-wider bg-background"
+                autoFocus
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                onClick={handleSave}
+              >
+                <IconCheck size={14} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                onClick={handleCancel}
+              >
+                <IconX size={14} />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 group">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {displayName}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                onClick={handleStartEdit}
+              >
+                <IconPencil size={12} />
+              </Button>
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <div className="flex items-center gap-2">
@@ -96,7 +183,6 @@ export function CollectionHeader({
                 ) : (
                   <IconTrendingDown size={16} className="mr-1" />
                 )}
-                {/* Dynamically show the time range label */}
                 <span>
                   {Math.abs(portfolioChange24h).toFixed(2)}% ({timeRange})
                 </span>
@@ -125,9 +211,13 @@ export function CollectionHeader({
         >
           <IconRefresh className="w-4 h-4" />
         </Button>
-        <Button variant="outline" className="gap-2 flex-1 md:flex-none">
-          <IconPlus className="w-4 h-4" />
-          Create Portfolio
+        <Button
+          variant="outline"
+          className="gap-2 flex-1 md:flex-none"
+          onClick={onImportWallet}
+        >
+          <IconWallet className="w-4 h-4" />
+          Change Wallet
         </Button>
       </div>
     </div>

@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils';
 import { RealNFT } from '@/lib/nft-types';
 import { ThreeDCard } from '@/components/shared/three-d-card';
 
-// Define Rarity Colors locally since we removed constants.ts
 const RARITY_COLORS: Record<string, string> = {
   Common: '#9ca3af',
   Uncommon: '#86efac',
@@ -27,12 +26,24 @@ interface AssetModalProps {
   isOpen: boolean;
   onClose: (open: boolean) => void;
   asset: RealNFT | null;
+  isDarkMode: boolean;
 }
 
-export function AssetModal({ isOpen, onClose, asset }: AssetModalProps) {
+export function AssetModal({
+  isOpen,
+  onClose,
+  asset,
+  isDarkMode,
+}: AssetModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl p-0 bg-background text-foreground border-border shadow-2xl focus:outline-none w-[90vw] max-h-[85vh] overflow-y-auto rounded-xl md:overflow-hidden md:max-h-none">
+      <DialogContent
+        className={cn(
+          // Added scrollbar hiding classes at the end of the string
+          'sm:max-w-3xl p-0 bg-background text-foreground border-border shadow-2xl focus:outline-none w-[90vw] max-h-[85vh] overflow-y-auto rounded-xl md:overflow-hidden md:max-h-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
+          isDarkMode ? 'dark' : ''
+        )}
+      >
         <DialogClose className="absolute right-4 top-4 z-50 opacity-70 hover:opacity-100 transition-opacity" />
 
         {asset && (
@@ -51,7 +62,7 @@ export function AssetModal({ isOpen, onClose, asset }: AssetModalProps) {
                     variant="outline"
                     className={cn(
                       'uppercase tracking-widest text-[10px]',
-                      asset.type === 'Booster'
+                      asset.type === 'Booster Box'
                         ? 'text-purple-500 border-purple-500/30'
                         : 'text-green-500 border-green-500/30'
                     )}
@@ -87,7 +98,7 @@ export function AssetModal({ isOpen, onClose, asset }: AssetModalProps) {
 
                 {/* Map Attributes to Stats Grid */}
                 {asset.attributes.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-2">
+                  <div className="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {asset.attributes.map((attr, i) => (
                       <div
                         key={i}
