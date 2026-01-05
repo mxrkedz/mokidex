@@ -237,7 +237,7 @@ export async function fetchRealTraitFloors(): Promise<Record<Rarity, number>> {
   ]);
 
   return {
-    '1 of 1': oneOfOne > 0 ? oneOfOne : 150000,
+    '1 of 1': oneOfOne > 0 ? oneOfOne : 0,
     Spirit: spirit,
     Shadow: shadow,
     Gold: gold,
