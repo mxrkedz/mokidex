@@ -1,27 +1,20 @@
 'use server';
 
 import { RealNFT, Rarity } from '@/lib/nft-types';
+import { fetchRealTraitFloors } from '@/app/actions/fetch-market-data';
 
 const MOKI_CONTRACT = '0x47b5a7c2e4f07772696bbf8c8c32fe2b9eabd550';
 const BOOSTER_CONTRACT = '0x3a3ea46230688a20ee45ec851dc81f76371f1235';
 
-// Define an interface for the incoming API data to avoid 'any'
 interface MoralisRawNFT {
   token_id: string;
   token_address: string;
-  metadata?:
-    | string
-    | {
-        name?: string;
-        description?: string;
-        image?: string;
-        attributes?: unknown[];
-      };
+  metadata?: string | Record<string, unknown>;
   normalized_metadata?: {
     name?: string;
     description?: string;
     image?: string;
-    attributes?: unknown[];
+    attributes?: { trait_type: string; value: string | number }[];
   };
   collection_logo?: string;
   rarity_label?: string;
@@ -32,12 +25,63 @@ interface MoralisRawNFT {
   };
 }
 
-// Added walletAddress parameter
+function getTraitRarity(
+  attributes: { trait_type: string; value: string | number }[]
+): Rarity {
+  // 1. Check for "1 of 1"
+  const isOneOfOne = attributes.some(
+    (attr) =>
+      String(attr.value).toLowerCase() === '1 of 1' ||
+      attr.trait_type.toLowerCase() === '1 of 1' ||
+      String(attr.value).toLowerCase() === '1/1'
+  );
+  if (isOneOfOne) return '1 of 1';
+
+  // 2. Check Fur Types
+  const furTrait = attributes.find(
+    (attr) =>
+      attr.trait_type === 'Fur Type' ||
+      attr.trait_type === 'Fur' ||
+      attr.trait_type === 'Type'
+  );
+
+  if (furTrait) {
+    const value = String(furTrait.value).toLowerCase();
+    if (value.includes('spirit')) return 'Spirit';
+    if (value.includes('shadow')) return 'Shadow';
+    if (value.includes('gold')) return 'Gold';
+    if (value.includes('rainbow')) return 'Rainbow';
+    if (value.includes('1 of 1')) return '1 of 1';
+  }
+
+  return 'Common';
+}
+
+function getRarityColor(rarity: Rarity): string {
+  switch (rarity) {
+    case '1 of 1':
+      return '#dc2626';
+    case 'Spirit':
+      return '#06b6d4';
+    case 'Shadow':
+      return '#7c3aed';
+    case 'Gold':
+      return '#eab308';
+    case 'Rainbow':
+      return '#f472b6';
+    default:
+      return '#9ca3af';
+  }
+}
+
 export async function fetchWalletNFTs(walletAddress: string) {
   const apiKey = process.env.MORALIS_API_KEY;
   if (!apiKey || !walletAddress) return [];
 
-  // Use the passed walletAddress in the URL
+  // 1. Fetch real prices first
+  const traitFloors = await fetchRealTraitFloors();
+  console.log('--- Trait Prices ---', traitFloors);
+
   const baseUrl = `https://deep-index.moralis.io/api/v2.2/${walletAddress}/nft?chain=ronin&format=decimal&token_addresses%5B0%5D=${MOKI_CONTRACT}&token_addresses%5B1%5D=${BOOSTER_CONTRACT}&media_items=true&include_prices=true`;
 
   let allNFTs: RealNFT[] = [];
@@ -45,10 +89,7 @@ export async function fetchWalletNFTs(walletAddress: string) {
 
   try {
     do {
-      // Explicitly type 'url' to fix TS7022 inference error
       const url: string = cursor ? `${baseUrl}&cursor=${cursor}` : baseUrl;
-
-      // Explicitly type 'response'
       const response: Response = await fetch(url, {
         method: 'GET',
         headers: { accept: 'application/json', 'X-API-Key': apiKey },
@@ -58,13 +99,10 @@ export async function fetchWalletNFTs(walletAddress: string) {
       if (!response.ok)
         throw new Error(`Moralis API error: ${response.status}`);
 
-      // Explicitly type 'data' structure
       const data: { cursor?: string; result: MoralisRawNFT[] } =
         await response.json();
-
       cursor = data.cursor || null;
 
-      // Use the interface instead of 'any'
       const pageNFTs: RealNFT[] = data.result.map((item: MoralisRawNFT) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let metadata: any = {};
@@ -74,34 +112,37 @@ export async function fetchWalletNFTs(walletAddress: string) {
               ? JSON.parse(item.metadata)
               : item.metadata || {};
         } catch {
-          /* ignore - removed unused 'e' */
+          /* ignore */
         }
 
         let contractType: 'Moki' | 'Booster' | 'Unknown' = 'Unknown';
         let uiType: 'Moki NFT' | 'Booster Box' = 'Moki NFT';
-        let color = '#9ca3af';
 
         if (item.token_address.toLowerCase() === MOKI_CONTRACT.toLowerCase()) {
           contractType = 'Moki';
           uiType = 'Moki NFT';
-          color = '#4ade80';
         } else if (
           item.token_address.toLowerCase() === BOOSTER_CONTRACT.toLowerCase()
         ) {
           contractType = 'Booster';
           uiType = 'Booster Box';
-          color = '#a78bfa';
         }
 
-        let rarity: Rarity = 'Common';
-        const label = item.rarity_label || '';
-        if (label.includes('Top 1%')) rarity = 'Legendary';
-        else if (label.includes('Top 5%')) rarity = 'Epic';
-        else if (label.includes('Top 20%')) rarity = 'Rare';
-        else if (label.includes('Top 40%')) rarity = 'Uncommon';
+        const attributes =
+          item.normalized_metadata?.attributes || metadata.attributes || [];
+        const rarity: Rarity = getTraitRarity(attributes);
+        const color = getRarityColor(rarity);
 
-        const floor = parseFloat(item.floor_price || '0');
-        const mockChange = Math.random() * 13 - 5;
+        // --- PRICING LOGIC ---
+        // 1. Get Moralis Generic Collection Floor
+        const collectionFloor = parseFloat(item.floor_price || '0');
+
+        // 2. Get Specific Trait Floor from our Mavis fetch
+        const specificTraitFloor = traitFloors[rarity];
+
+        // 3. Assign
+        const finalFloorPrice =
+          specificTraitFloor > 0 ? specificTraitFloor : collectionFloor;
 
         return {
           id: item.token_id,
@@ -120,15 +161,14 @@ export async function fetchWalletNFTs(walletAddress: string) {
           contractType,
           type: uiType,
           rarity,
-          rarityLabel: item.rarity_label || 'Common',
-          rarityRank: item.rarity_rank || 999999,
-          floorPrice: floor,
-          change24h: mockChange,
+          rarityLabel: rarity,
+          rarityRank: item.rarity_rank || 0,
+          floorPrice: finalFloorPrice,
+          change24h: 0,
           lastSale: item.last_sale
             ? parseFloat(item.last_sale.price || '0')
             : 0,
-          attributes:
-            metadata.attributes || item.normalized_metadata?.attributes || [],
+          attributes: attributes,
           contractAddress: item.token_address,
           color,
         };

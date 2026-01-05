@@ -16,10 +16,11 @@ import { ThreeDCard } from '@/components/shared/three-d-card';
 
 const RARITY_COLORS: Record<string, string> = {
   Common: '#9ca3af',
-  Uncommon: '#86efac',
-  Rare: '#60a5fa',
-  Epic: '#a78bfa',
-  Legendary: '#fb923c',
+  Rainbow: '#f472b6',
+  Gold: '#eab308',
+  Shadow: '#7c3aed',
+  Spirit: '#06b6d4',
+  '1 of 1': '#dc2626',
 };
 
 interface AssetModalProps {
@@ -39,7 +40,6 @@ export function AssetModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={cn(
-          // Added scrollbar hiding classes at the end of the string
           'sm:max-w-3xl p-0 bg-background text-foreground border-border shadow-2xl focus:outline-none w-[90vw] max-h-[85vh] overflow-y-auto rounded-xl md:overflow-hidden md:max-h-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
           isDarkMode ? 'dark' : ''
         )}
