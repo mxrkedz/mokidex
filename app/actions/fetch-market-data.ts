@@ -212,12 +212,12 @@ async function fetchFloorForTrait(
       if (cheapestListing) {
         const weiPrice = cheapestListing.order.currentPrice;
         const ronPrice = parseFloat(weiPrice) / 1e18;
-        console.log(`✅ ${traitValue} Floor: ${ronPrice} RON`);
+        console.log(`${traitValue} Floor: ${ronPrice} RON`);
         return ronPrice;
       }
     }
 
-    console.log(`⚠️ No listings for ${traitValue}`);
+    console.log(`No listings for ${traitValue}`);
     return 0;
   } catch (error) {
     console.error(`Failed to fetch floor for ${traitValue}:`, error);

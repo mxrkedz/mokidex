@@ -1,3 +1,4 @@
+// app/collection/page.tsx
 'use client';
 
 import * as React from 'react';
@@ -122,17 +123,24 @@ export default function CollectionPage() {
     const loadHistory = async () => {
       setIsHistoryLoading(true);
       try {
-        const mokiCount = assets.filter(
-          (a) => a.contractType === 'Moki'
-        ).length;
-        const boosterCount = assets.filter(
-          (a) => a.contractType === 'Booster'
-        ).length;
+        const totalCurrentMokiValue = assets
+          .filter((a) => a.contractType === 'Moki')
+          .reduce((acc, curr) => acc + curr.floorPrice, 0);
+
+        const totalCurrentBoosterValue = assets
+          .filter((a) => a.contractType === 'Booster')
+          .reduce((acc, curr) => acc + curr.floorPrice, 0);
 
         const [mokiHistory, boosterHistory] = await Promise.all([
           fetchHistoricalPrices(MOKI_CONTRACT, timeRange),
           fetchHistoricalPrices(BOOSTER_CONTRACT, timeRange),
         ]);
+
+        const latestMoki = mokiHistory[mokiHistory.length - 1];
+        const latestBooster = boosterHistory[boosterHistory.length - 1];
+
+        const currentMokiFloor = latestMoki ? latestMoki.price : 1;
+        const currentBoosterFloor = latestBooster ? latestBooster.price : 1;
 
         const timestampSet = new Set<string>();
         mokiHistory.forEach((h) => timestampSet.add(h.date));
@@ -146,9 +154,17 @@ export default function CollectionPage() {
           const mPoint = mokiHistory.find((h) => h.date === timestamp);
           const bPoint = boosterHistory.find((h) => h.date === timestamp);
 
-          const mPrice = mPoint ? mPoint.price : 0;
-          const bPrice = bPoint ? bPoint.price : 0;
-          const totalValue = mPrice * mokiCount + bPrice * boosterCount;
+          const mFloorAtT = mPoint ? mPoint.price : 0;
+          const bFloorAtT = bPoint ? bPoint.price : 0;
+
+          const mRatio =
+            currentMokiFloor > 0 ? mFloorAtT / currentMokiFloor : 0;
+          const bRatio =
+            currentBoosterFloor > 0 ? bFloorAtT / currentBoosterFloor : 0;
+
+          const totalValue =
+            totalCurrentMokiValue * mRatio + totalCurrentBoosterValue * bRatio;
+
           const dateObj = new Date(timestamp);
 
           let shortDate = '';
@@ -234,7 +250,6 @@ export default function CollectionPage() {
         isDarkMode ? 'dark' : ''
       )}
     >
-      {/* Updated: Removed Props */}
       <MobileNav />
       <Sidebar />
 
@@ -276,6 +291,7 @@ export default function CollectionPage() {
                   setIsPrivacyMode={setIsPrivacyMode}
                   onRefresh={loadInitialData}
                   isRefreshing={isLoading}
+                  isLoading={isLoading} // Added Prop
                   timeRange={timeRange}
                   onImportWallet={() => setIsImportModalOpen(true)}
                   walletAddress={walletAddress}
@@ -289,7 +305,8 @@ export default function CollectionPage() {
                   historyData={historyData}
                   timeRange={timeRange}
                   setTimeRange={setTimeRange}
-                  isLoading={isHistoryLoading}
+                  isLoading={isLoading} // Added Prop
+                  isHistoryLoading={isHistoryLoading} // Added Prop
                 />
 
                 <Card className="w-full">
@@ -317,21 +334,15 @@ export default function CollectionPage() {
                   </CardHeader>
 
                   <CardContent>
-                    {isLoading ? (
-                      <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground">
-                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-                        <p>Loading assets...</p>
-                      </div>
-                    ) : (
-                      <CollectionGrid
-                        assets={filteredAssets}
-                        itemsPerPage={15}
-                        onCardClick={(asset) => {
-                          setSelectedAsset(asset);
-                          setIsDetailOpen(true);
-                        }}
-                      />
-                    )}
+                    <CollectionGrid
+                      assets={filteredAssets}
+                      itemsPerPage={15}
+                      isLoading={isLoading} // Added Prop
+                      onCardClick={(asset) => {
+                        setSelectedAsset(asset);
+                        setIsDetailOpen(true);
+                      }}
+                    />
                   </CardContent>
                 </Card>
               </>

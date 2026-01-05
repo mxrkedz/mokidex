@@ -1,10 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image'; // Import Next.js Image component
+import Image from 'next/image';
 import { RealNFT } from '@/lib/nft-types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 
@@ -12,12 +13,14 @@ interface CollectionGridProps {
   assets: RealNFT[];
   itemsPerPage?: number;
   onCardClick: (asset: RealNFT) => void;
+  isLoading?: boolean; // Added isLoading prop
 }
 
 export function CollectionGrid({
   assets,
   itemsPerPage = 25,
   onCardClick,
+  isLoading = false,
 }: CollectionGridProps) {
   const [currentPage, setCurrentPage] = React.useState(1);
 
@@ -31,7 +34,6 @@ export function CollectionGrid({
 
   // Helper to split price for styling
   const getPriceParts = (price: number) => {
-    // Format with commas, up to 2 decimals
     const str = price.toLocaleString(undefined, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
@@ -42,6 +44,31 @@ export function CollectionGrid({
       decimal: parts[1] ? `.${parts[1]}` : '',
     };
   };
+
+  // -- Loading Skeleton State --
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl border border-border bg-card overflow-hidden"
+            >
+              <Skeleton className="aspect-square w-full rounded-none" />
+              <div className="p-4 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-10 rounded-full" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (assets.length === 0) {
     return (
@@ -75,7 +102,7 @@ export function CollectionGrid({
                     src={asset.image}
                     alt={asset.name}
                     fill
-                    className="object-cover transition-transform duration-500 group-hover/card:scale-105"
+                    className="object-cover"
                     sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                   />
                 ) : (
@@ -91,7 +118,6 @@ export function CollectionGrid({
                   {asset.name}
                 </h3>
                 <div className="flex items-center justify-between">
-                  {/* ID Badge instead of Rarity */}
                   <Badge
                     variant="secondary"
                     className="text-[10px] h-5 px-1.5 font-mono font-medium opacity-80"
@@ -99,7 +125,6 @@ export function CollectionGrid({
                     #{asset.tokenId}
                   </Badge>
 
-                  {/* Styled Price */}
                   <div className="text-xs font-medium text-right">
                     <span className="text-foreground font-semibold text-sm">
                       {whole}
@@ -115,7 +140,6 @@ export function CollectionGrid({
         })}
       </div>
 
-      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-4 pt-8 border-t border-border mt-8">
           <Button

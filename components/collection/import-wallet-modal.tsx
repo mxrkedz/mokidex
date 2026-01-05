@@ -49,7 +49,7 @@ export function ImportWalletModal({
         <DialogHeader>
           <DialogTitle>Import Wallet</DialogTitle>
           <DialogDescription>
-            Enter an EVM address to track its portfolio. This will be saved
+            Enter a Ronin address to track your Mokullection. This will be saved
             locally.
           </DialogDescription>
         </DialogHeader>

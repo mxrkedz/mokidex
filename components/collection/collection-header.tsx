@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Ensure you have this component or use standard input
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   IconEye,
   IconEyeOff,
@@ -25,11 +26,12 @@ interface CollectionHeaderProps {
   setIsPrivacyMode: (val: boolean) => void;
   onRefresh: () => void;
   isRefreshing: boolean;
+  isLoading?: boolean; // Added isLoading prop
   timeRange: TimeRange;
   onImportWallet: () => void;
-  walletAddress: string; // New prop
-  portfolioName: string; // New prop
-  onUpdateName: (name: string) => void; // New prop
+  walletAddress: string;
+  portfolioName: string;
+  onUpdateName: (name: string) => void;
 }
 
 export function CollectionHeader({
@@ -40,6 +42,7 @@ export function CollectionHeader({
   setIsPrivacyMode,
   onRefresh,
   isRefreshing,
+  isLoading = false,
   timeRange,
   onImportWallet,
   walletAddress,
@@ -53,10 +56,9 @@ export function CollectionHeader({
   const [isEditing, setIsEditing] = React.useState(false);
   const [tempName, setTempName] = React.useState('');
 
-  // Default name if no custom name is set
   const defaultName = walletAddress
-    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} Portfolio`
-    : 'My Portfolio';
+    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}'s Mokullection`
+    : 'My Mokullection';
 
   const displayName = portfolioName || defaultName;
 
@@ -69,7 +71,6 @@ export function CollectionHeader({
     if (tempName.trim()) {
       onUpdateName(tempName.trim());
     } else {
-      // If user clears input, revert to default (empty string)
       onUpdateName('');
     }
     setIsEditing(false);
@@ -83,7 +84,6 @@ export function CollectionHeader({
     if (e.key === 'Enter') handleSave();
     if (e.key === 'Escape') handleCancel();
   };
-  // --------------------
 
   const formatValue = (val: number) => {
     const str = val.toLocaleString(undefined, {
@@ -101,8 +101,10 @@ export function CollectionHeader({
     <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6">
       <div className="flex flex-col items-start min-w-[140px]">
         {/* Editable Label Section */}
-        <div className="h-8 flex items-center mb-1">
-          {isEditing ? (
+        <div className="h-8 flex items-center mb-1 w-full">
+          {isLoading ? (
+            <Skeleton className="h-4 w-32" />
+          ) : isEditing ? (
             <div className="flex items-center gap-1 animate-in fade-in duration-200">
               <Input
                 value={tempName}
@@ -147,8 +149,10 @@ export function CollectionHeader({
 
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <div className="flex items-center gap-2">
-            <div className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-              {isPrivacyMode ? (
+            <div className="text-3xl md:text-4xl font-bold tracking-tight text-foreground min-h-[40px] flex items-center">
+              {isLoading ? (
+                <Skeleton className="h-8 w-48" />
+              ) : isPrivacyMode ? (
                 '••••••••'
               ) : (
                 <>
@@ -171,32 +175,40 @@ export function CollectionHeader({
           </div>
 
           {!isPrivacyMode && (
-            <div className="flex items-center gap-3 text-sm font-medium animate-in fade-in slide-in-from-left-2 duration-500">
-              <div
-                className={cn(
-                  'flex items-center',
-                  isPositive ? 'text-green-500' : 'text-red-500'
-                )}
-              >
-                {isPositive ? (
-                  <IconTrendingUp size={16} className="mr-1" />
-                ) : (
-                  <IconTrendingDown size={16} className="mr-1" />
-                )}
-                <span>
-                  {Math.abs(portfolioChange24h).toFixed(2)}% ({timeRange})
-                </span>
-              </div>
+            <div className="flex items-center gap-3 text-sm font-medium animate-in fade-in slide-in-from-left-2 duration-500 h-6">
+              {isLoading ? (
+                <Skeleton className="h-4 w-20" />
+              ) : (
+                <div
+                  className={cn(
+                    'flex items-center',
+                    isPositive ? 'text-green-500' : 'text-red-500'
+                  )}
+                >
+                  {isPositive ? (
+                    <IconTrendingUp size={16} className="mr-1" />
+                  ) : (
+                    <IconTrendingDown size={16} className="mr-1" />
+                  )}
+                  <span>
+                    {Math.abs(portfolioChange24h).toFixed(2)}% ({timeRange})
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        <span className="text-base text-muted-foreground font-medium mt-1">
-          {isPrivacyMode
-            ? '••••••'
-            : `≈ $${totalUsdValue.toLocaleString(undefined, {
-                maximumFractionDigits: 2,
-              })} USD`}
+        <span className="text-base text-muted-foreground font-medium mt-1 min-h-[24px] flex items-center">
+          {isLoading ? (
+            <Skeleton className="h-4 w-24" />
+          ) : isPrivacyMode ? (
+            '••••••'
+          ) : (
+            `≈ $${totalUsdValue.toLocaleString(undefined, {
+              maximumFractionDigits: 2,
+            })} USD`
+          )}
         </span>
       </div>
 
@@ -206,8 +218,8 @@ export function CollectionHeader({
           size="icon"
           title="Refresh Data"
           onClick={onRefresh}
-          disabled={isRefreshing}
-          className={cn(isRefreshing && 'animate-spin')}
+          disabled={isRefreshing || isLoading}
+          className={cn((isRefreshing || isLoading) && 'animate-spin')}
         >
           <IconRefresh className="w-4 h-4" />
         </Button>

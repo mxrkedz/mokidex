@@ -4,7 +4,7 @@ import {
   IconChartBar,
   IconBuildingStore,
   IconTrophy,
-  IconBriefcase,
+  IconCircleX,
 } from '@tabler/icons-react';
 import { MokuAsset, Rarity, TimeRange } from './types';
 
@@ -136,7 +136,7 @@ export const RARITY_COLORS: Record<Rarity, string> = {
 
 export const NAV_ITEMS = [
   { name: 'Dashboard', icon: IconLayoutDashboard, href: '/' },
-  { name: 'Portfolio', icon: IconBriefcase, href: '/collection' },
+  { name: 'Mokullection', icon: IconCircleX, href: '/collection' },
   { name: 'Deck Builder', icon: IconDeviceGamepad2, href: '#' },
   { name: 'Arena Stats', icon: IconChartBar, href: '#' },
   { name: 'Marketplace', icon: IconBuildingStore, href: '#' },
