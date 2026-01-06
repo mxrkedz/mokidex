@@ -23,9 +23,14 @@ import { ImportWalletModal } from '@/components/collection/import-wallet-modal';
 
 // UI Components
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { IconWallet, IconDownload } from '@tabler/icons-react';
+import {
+  IconWallet,
+  IconDownload,
+  IconLayoutDashboard,
+  IconGridDots,
+} from '@tabler/icons-react';
 
 export default function CollectionPage() {
   const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
@@ -43,7 +48,13 @@ export default function CollectionPage() {
 
   const [isLoading, setIsLoading] = React.useState(false);
 
-  // Filters & UI State
+  // View State (Overview vs Collection)
+  const [viewTab, setViewTab] = React.useState('overview');
+
+  // Responsive Grid State
+  const [itemsPerPage, setItemsPerPage] = React.useState(15);
+
+  // Collection Filters & UI State
   const [activeTab, setActiveTab] = React.useState('All');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [sortOption, setSortOption] =
@@ -66,12 +77,31 @@ export default function CollectionPage() {
     setIsAuthChecking(false);
   }, []);
 
+  // 2. Responsive Items Per Page Handler
+  React.useEffect(() => {
+    const handleResize = () => {
+      // Mobile (usually < 768px) is 2 columns. 16 is divisible by 2.
+      // Desktop (xl) is 5 columns. 15 is divisible by 5.
+      if (window.innerWidth < 768) {
+        setItemsPerPage(16);
+      } else {
+        setItemsPerPage(15);
+      }
+    };
+
+    // Set initial value
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleUpdateName = (name: string) => {
     setPortfolioName(name);
     localStorage.setItem('userPortfolioName', name);
   };
 
-  // 2. Load Data
+  // 3. Load Data
   const loadInitialData = React.useCallback(async () => {
     if (!walletAddress) return;
 
@@ -149,7 +179,7 @@ export default function CollectionPage() {
 
       <div className="flex-1 h-full overflow-hidden flex flex-col relative">
         <main className="flex-1 p-4 md:p-8 overflow-y-auto scroll-smooth">
-          <div className="max-w-7xl mx-auto space-y-8 pb-4 h-full">
+          <div className="max-w-7xl mx-auto space-y-6 pb-4 h-full">
             {isAuthChecking ? (
               <div className="flex h-[50vh] items-center justify-center">
                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -193,47 +223,77 @@ export default function CollectionPage() {
                   onUpdateName={handleUpdateName}
                 />
 
-                <CollectionOverview
-                  isPrivacyMode={isPrivacyMode}
-                  assets={assets}
-                  isLoading={isLoading}
-                  ronPrice={ronPrice.usdPrice}
-                  onCardClick={handleCardClick}
-                />
+                {/* Main View Switcher */}
+                <Tabs
+                  value={viewTab}
+                  onValueChange={setViewTab}
+                  className="w-full space-y-6"
+                >
+                  {/* Tab Navigation */}
+                  <TabsList className="w-full max-w-[400px] grid grid-cols-2">
+                    <TabsTrigger value="overview" className="gap-2">
+                      <IconLayoutDashboard className="w-4 h-4" /> Overview
+                    </TabsTrigger>
+                    <TabsTrigger value="collection" className="gap-2">
+                      <IconGridDots className="w-4 h-4" /> Full Collection
+                    </TabsTrigger>
+                  </TabsList>
 
-                <Card className="w-full">
-                  <CardHeader className="pb-4">
-                    <Tabs
-                      value={activeTab}
-                      onValueChange={setActiveTab}
-                      className="w-full"
-                    >
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                        <TabsList>
-                          <TabsTrigger value="All">All Items</TabsTrigger>
-                          <TabsTrigger value="Moki">Moki</TabsTrigger>
-                          <TabsTrigger value="Booster">Booster</TabsTrigger>
-                        </TabsList>
-
-                        <CollectionToolbar
-                          searchQuery={searchQuery}
-                          setSearchQuery={setSearchQuery}
-                          sortOption={sortOption}
-                          setSortOption={setSortOption}
-                        />
-                      </div>
-                    </Tabs>
-                  </CardHeader>
-
-                  <CardContent>
-                    <CollectionGrid
-                      assets={filteredAssets}
-                      itemsPerPage={15}
+                  {/* Overview Tab Content */}
+                  <TabsContent
+                    value="overview"
+                    className="mt-0 focus-visible:outline-none"
+                  >
+                    <CollectionOverview
+                      isPrivacyMode={isPrivacyMode}
+                      assets={assets}
                       isLoading={isLoading}
+                      ronPrice={ronPrice.usdPrice}
                       onCardClick={handleCardClick}
                     />
-                  </CardContent>
-                </Card>
+                  </TabsContent>
+
+                  {/* Collection Grid Tab Content */}
+                  <TabsContent
+                    value="collection"
+                    className="mt-0 focus-visible:outline-none"
+                  >
+                    <Card className="w-full">
+                      <CardHeader className="pb-4">
+                        <Tabs
+                          value={activeTab}
+                          onValueChange={setActiveTab}
+                          className="w-full"
+                        >
+                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                            <TabsList>
+                              <TabsTrigger value="All">All Items</TabsTrigger>
+                              <TabsTrigger value="Moki">Moki</TabsTrigger>
+                              <TabsTrigger value="Booster">Booster</TabsTrigger>
+                            </TabsList>
+
+                            <CollectionToolbar
+                              searchQuery={searchQuery}
+                              setSearchQuery={setSearchQuery}
+                              sortOption={sortOption}
+                              setSortOption={setSortOption}
+                            />
+                          </div>
+                        </Tabs>
+                      </CardHeader>
+
+                      <CardContent>
+                        <CollectionGrid
+                          assets={filteredAssets}
+                          itemsPerPage={itemsPerPage} // Using dynamic responsive value
+                          isLoading={isLoading}
+                          onCardClick={handleCardClick}
+                          ronPrice={ronPrice.usdPrice}
+                        />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </>
             )}
 

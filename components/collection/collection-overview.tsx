@@ -213,7 +213,7 @@ export function CollectionOverview({
                           </div>
                           {/* USD Price */}
                           <div className="text-[10px] text-muted-foreground/80 -mt-0.5 font-mono">
-                            {formatUsd(asset.floorPrice)}
+                            ≈ {formatUsd(asset.floorPrice)}
                           </div>
                         </div>
                       </div>

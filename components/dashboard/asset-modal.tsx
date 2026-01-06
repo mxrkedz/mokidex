@@ -219,7 +219,7 @@ export function AssetModal({
               {/* Marketplace Button */}
               <div className="pb-2">
                 <Button
-                  className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white border-none h-11"
+                  className="w-full gap-2 bg-primary hover:bg-primary/80 text-white border-none h-11"
                   onClick={() =>
                     window.open(getMarketplaceUrl(asset), '_blank')
                   }
