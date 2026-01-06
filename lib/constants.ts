@@ -134,7 +134,7 @@ export const RARITY_COLORS: Record<Rarity, string> = {
 export const NAV_ITEMS = [
   { name: 'Dashboard', icon: IconLayoutDashboard, href: '/' },
   { name: 'Mokullection', icon: IconCircleX, href: '/collection' },
-  { name: 'Feedback', icon: IconBubble, href: '#' },
+  { name: 'More Comming Soon', icon: IconBubble, href: '#' },
   // { name: 'Arena Stats', icon: IconChartBar, href: '#' },
   // { name: 'Marketplace', icon: IconBuildingStore, href: '#' },
   // { name: 'Leaderboard', icon: IconTrophy, href: '#' },
