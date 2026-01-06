@@ -32,7 +32,8 @@ export function ImportWalletModal({
 
   const handleImport = () => {
     if (address.trim()) {
-      onImport(address.trim());
+      // Normalize to lowercase to handle caps lock/mixed case
+      onImport(address.trim().toLowerCase());
       onClose(false);
     }
   };

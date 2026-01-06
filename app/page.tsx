@@ -28,8 +28,10 @@ import {
   IconTags,
   IconMail,
   IconTransfer,
+  IconExternalLink,
 } from '@tabler/icons-react';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   const [isDarkMode, setIsDarkMode] = React.useState(true);
@@ -173,6 +175,22 @@ export default function DashboardPage() {
                               </div>
                             </div>
                           ))}
+                          <div className="pt-2">
+                            <a
+                              href="https://marketplace.roninchain.com/collections/moki-genesis"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block w-full"
+                            >
+                              <Button
+                                variant="outline"
+                                className="w-full gap-2 border border-primary/30 hover:bg-primary/5 hover:border-primary/50 text-foreground hover:text-primary transition-all"
+                              >
+                                View Collection on Marketplace
+                                <IconExternalLink size={14} />
+                              </Button>
+                            </a>
+                          </div>
                         </div>
                       )}
                     </CardContent>
