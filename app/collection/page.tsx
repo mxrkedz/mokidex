@@ -12,7 +12,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { Footer } from '@/components/layout/footer';
 import { CollectionHeader } from '@/components/collection/collection-header';
-import { CollectionOverview } from '@/components/collection/collection-overview'; // Uses the new unified component
+import { CollectionOverview } from '@/components/collection/collection-overview';
 import {
   CollectionToolbar,
   SortOption,
@@ -103,6 +103,11 @@ export default function CollectionPage() {
     localStorage.removeItem('userPortfolioName');
   };
 
+  const handleCardClick = (asset: RealNFT) => {
+    setSelectedAsset(asset);
+    setIsDetailOpen(true);
+  };
+
   const totalPortfolioValue = React.useMemo(() => {
     return assets.reduce((acc, curr) => acc + curr.floorPrice, 0);
   }, [assets]);
@@ -175,7 +180,7 @@ export default function CollectionPage() {
                 <CollectionHeader
                   totalRonValue={totalPortfolioValue}
                   ronPriceUsd={ronPrice.usdPrice}
-                  portfolioChange24h={0}
+                  // REMOVED portfolioChange24h prop
                   isPrivacyMode={isPrivacyMode}
                   setIsPrivacyMode={setIsPrivacyMode}
                   onRefresh={loadInitialData}
@@ -188,11 +193,12 @@ export default function CollectionPage() {
                   onUpdateName={handleUpdateName}
                 />
 
-                {/* Combined Overview: Holdings Breakdown + Top Assets */}
                 <CollectionOverview
                   isPrivacyMode={isPrivacyMode}
                   assets={assets}
                   isLoading={isLoading}
+                  ronPrice={ronPrice.usdPrice}
+                  onCardClick={handleCardClick}
                 />
 
                 <Card className="w-full">
@@ -224,10 +230,7 @@ export default function CollectionPage() {
                       assets={filteredAssets}
                       itemsPerPage={15}
                       isLoading={isLoading}
-                      onCardClick={(asset) => {
-                        setSelectedAsset(asset);
-                        setIsDetailOpen(true);
-                      }}
+                      onCardClick={handleCardClick}
                     />
                   </CardContent>
                 </Card>

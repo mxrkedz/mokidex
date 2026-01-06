@@ -173,30 +173,6 @@ export function CollectionHeader({
               {isPrivacyMode ? <IconEyeOff size={18} /> : <IconEye size={18} />}
             </Button>
           </div>
-
-          {!isPrivacyMode && (
-            <div className="flex items-center gap-3 text-sm font-medium animate-in fade-in slide-in-from-left-2 duration-500 h-6">
-              {isLoading ? (
-                <Skeleton className="h-4 w-20" />
-              ) : (
-                <div
-                  className={cn(
-                    'flex items-center',
-                    isPositive ? 'text-green-500' : 'text-red-500'
-                  )}
-                >
-                  {isPositive ? (
-                    <IconTrendingUp size={16} className="mr-1" />
-                  ) : (
-                    <IconTrendingDown size={16} className="mr-1" />
-                  )}
-                  <span>
-                    {Math.abs(portfolioChange24h).toFixed(2)}% ({timeRange})
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         <span className="text-base text-muted-foreground font-medium mt-1 min-h-[24px] flex items-center">

@@ -2,27 +2,29 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { RealNFT } from '@/lib/nft-types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { IconBox, IconChartPie, IconTrophy } from '@tabler/icons-react';
+import { Badge } from '@/components/ui/badge';
+import { IconChartPie, IconTrophy, IconBox } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 
 interface CollectionOverviewProps {
   assets: RealNFT[];
   isLoading: boolean;
   isPrivacyMode: boolean;
+  ronPrice: number;
+  onCardClick?: (asset: RealNFT) => void;
 }
 
 export function CollectionOverview({
   assets,
   isLoading,
   isPrivacyMode,
+  ronPrice,
+  onCardClick,
 }: CollectionOverviewProps) {
-  const [topFilter, setTopFilter] = React.useState('All');
-
   // --- Calculations ---
   const stats = React.useMemo(() => {
     const totalValue = assets.reduce((acc, curr) => acc + curr.floorPrice, 0);
@@ -38,27 +40,46 @@ export function CollectionOverview({
       0
     );
 
+    const safeTotal = totalValue || 1;
+
     return {
-      totalValue: totalValue || 1, // Prevent div by zero
+      totalValue,
       mokiCount: mokiAssets.length,
       boosterCount: boosterAssets.length,
       mokiValue,
       boosterValue,
-      mokiPercent: (mokiValue / (totalValue || 1)) * 100,
-      boosterPercent: (boosterValue / (totalValue || 1)) * 100,
+      mokiPercent: (mokiValue / safeTotal) * 100,
+      boosterPercent: (boosterValue / safeTotal) * 100,
     };
   }, [assets]);
 
+  // Top 4 Assets by Floor Price (No filters)
   const topAssets = React.useMemo(() => {
-    let filtered = [...assets];
-    if (topFilter === 'Moki') {
-      filtered = filtered.filter((a) => a.contractType === 'Moki');
-    } else if (topFilter === 'Booster') {
-      filtered = filtered.filter((a) => a.contractType === 'Booster');
-    }
-    // Sort by Floor Price Descending
-    return filtered.sort((a, b) => b.floorPrice - a.floorPrice).slice(0, 4);
-  }, [assets, topFilter]);
+    return [...assets].sort((a, b) => b.floorPrice - a.floorPrice).slice(0, 4);
+  }, [assets]);
+
+  // Helper to split price for styling
+  const getPriceParts = (price: number) => {
+    const str = price.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+    const parts = str.split('.');
+    return {
+      whole: parts[0],
+      decimal: parts[1] ? `.${parts[1]}` : '',
+    };
+  };
+
+  const formatUsd = (ronValue: number) => {
+    const val = ronValue * ronPrice;
+    return val.toLocaleString(undefined, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
 
   if (isLoading) {
     return <OverviewSkeleton />;
@@ -67,170 +88,157 @@ export function CollectionOverview({
   return (
     <div className="grid gap-4 md:grid-cols-7 lg:grid-cols-7">
       {/* --- LEFT: Holdings Breakdown (3 Cols) --- */}
-      <Card className="col-span-full md:col-span-3 flex flex-col">
-        <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
+      <Card className="col-span-full md:col-span-3 flex flex-col h-full shadow-sm">
+        <CardHeader className="pb-2">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
             <IconChartPie className="w-5 h-5 text-primary" />
             Holdings Breakdown
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 space-y-6 pt-4">
-          {/* Moki Stat */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary" />
-                <span className="font-medium text-muted-foreground">
-                  Moki NFTs
-                </span>
+        <CardContent className="flex-1 flex flex-col justify-center space-y-8">
+          {/* Stats Row */}
+          <div className="flex justify-between items-end px-1">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                {/* Moki Indicator: Yellow-500 */}
+                <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                Moki
               </div>
-              <div className="text-right">
-                <div className="font-bold">
-                  {isPrivacyMode
-                    ? '****'
-                    : `${stats.mokiValue.toLocaleString()} RON`}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {stats.mokiCount} Items
-                </div>
+              <div className="text-2xl font-bold tracking-tight">
+                {isPrivacyMode ? '••••••' : `${stats.mokiPercent.toFixed(0)}%`}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {stats.mokiCount} Items
               </div>
             </div>
-            <Progress value={stats.mokiPercent} className="h-2 bg-secondary" />
+
+            <div className="space-y-1 text-right">
+              <div className="flex items-center justify-end gap-2 text-sm font-medium text-muted-foreground">
+                Box
+                <div className="w-2 h-2 rounded-full bg-purple-500" />
+              </div>
+              <div className="text-2xl font-bold tracking-tight">
+                {isPrivacyMode ? '••••••' : `${stats.boosterPercent.toFixed(0)}%`}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {stats.boosterCount} Items
+              </div>
+            </div>
           </div>
 
-          {/* Booster Stat */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-purple-500" />
-                <span className="font-medium text-muted-foreground">
-                  Booster Boxes
-                </span>
-              </div>
-              <div className="text-right">
-                <div className="font-bold">
-                  {isPrivacyMode
-                    ? '****'
-                    : `${stats.boosterValue.toLocaleString()} RON`}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {stats.boosterCount} Items
-                </div>
-              </div>
-            </div>
-            <Progress
-              value={stats.boosterPercent}
-              className="h-2 bg-secondary [&>div]:bg-purple-500"
+          {/* Single Stacked Progress Bar */}
+          <div className="h-3 w-full rounded-full bg-secondary/50 overflow-hidden flex relative">
+            {/* Moki Segment: Yellow-500 */}
+            <div
+              className="h-full bg-yellow-500 transition-all duration-500 ease-in-out"
+              style={{ width: `${stats.mokiPercent}%` }}
+            />
+            {/* Booster Segment: Purple-500 */}
+            <div
+              className="h-full bg-purple-500 transition-all duration-500 ease-in-out"
+              style={{ width: `${stats.boosterPercent}%` }}
             />
           </div>
 
-          {/* Total Summary */}
-          <div className="pt-4 border-t mt-auto">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Allocation</span>
-              <span className="text-sm font-mono text-muted-foreground">
-                {stats.mokiPercent.toFixed(1)}% Moki /{' '}
-                {stats.boosterPercent.toFixed(1)}% Box
-              </span>
+          {/* Allocation Text */}
+          <div className="pt-4 border-t border-border/50">
+            <div className="flex justify-between items-center text-xs text-muted-foreground">
+              <span>Total Allocation</span>
+              <div className="text-right">
+                <div className="font-mono font-medium text-foreground">
+                  {isPrivacyMode
+                    ? '••••••'
+                    : `${stats.totalValue.toLocaleString()} RON`}
+                </div>
+                {!isPrivacyMode && (
+                  <div className="text-[10px] text-muted-foreground">
+                    {formatUsd(stats.totalValue)}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* --- RIGHT: Top Assets (4 Cols) --- */}
-      <Card className="col-span-full md:col-span-4 flex flex-col">
-        <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
+      <Card className="col-span-full md:col-span-4 flex flex-col h-full shadow-sm">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
             <IconTrophy className="w-5 h-5 text-yellow-500" />
-            Top Assets
+            Most Valuable
           </CardTitle>
-          <Tabs
-            value={topFilter}
-            onValueChange={setTopFilter}
-            className="w-auto"
-          >
-            <TabsList className="h-8 p-0 bg-secondary/50">
-              <TabsTrigger
-                value="All"
-                className="h-full px-3 text-xs data-[state=active]:bg-background rounded-sm"
-              >
-                All
-              </TabsTrigger>
-              <TabsTrigger
-                value="Moki"
-                className="h-full px-3 text-xs data-[state=active]:bg-background rounded-sm"
-              >
-                Moki
-              </TabsTrigger>
-              <TabsTrigger
-                value="Booster"
-                className="h-full px-3 text-xs data-[state=active]:bg-background rounded-sm"
-              >
-                Box
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
         </CardHeader>
-        <CardContent className="pt-4 flex-1">
+        <CardContent className="pt-4">
           {topAssets.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {topAssets.map((asset) => (
-                <div
-                  key={asset.id}
-                  className="group relative flex flex-col rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 overflow-hidden"
-                >
-                  {/* Image Area */}
-                  <div className="aspect-square relative bg-secondary/20 overflow-hidden">
-                    <img
-                      src={asset.cdnImage || asset.image}
-                      alt={asset.name}
-                      className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    {/* Rarity Badge */}
-                    <div className="absolute top-1 right-1">
-                      <span
-                        className="px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider text-white shadow-sm backdrop-blur-md"
-                        style={{ backgroundColor: asset.color }}
-                      >
-                        {asset.rarityLabel}
-                      </span>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {topAssets.map((asset) => {
+                const { whole, decimal } = getPriceParts(asset.floorPrice || 0);
 
-                  {/* Info Area */}
-                  <div className="p-2 space-y-1">
-                    <h3
-                      className="font-semibold text-xs truncate"
-                      title={asset.name}
-                    >
-                      {asset.name}
-                    </h3>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-muted-foreground">
-                        Floor
-                      </span>
-                      <span
-                        className={cn(
-                          'text-[11px] font-bold font-mono',
-                          isPrivacyMode ? 'blur-sm' : ''
-                        )}
-                        style={{
-                          color:
-                            asset.floorPrice > 1000 ? '#4ade80' : undefined,
-                        }}
-                      >
-                        {isPrivacyMode
-                          ? '999'
-                          : asset.floorPrice.toLocaleString()}
-                      </span>
+                return (
+                  <div
+                    key={asset.id}
+                    onClick={() => onCardClick?.(asset)}
+                    className={cn(
+                      'group/card relative overflow-hidden rounded-xl border border-border bg-card',
+                      'hover:bg-muted/50 transition-all',
+                      'hover:scale-[1.02] cursor-pointer'
+                    )}
+                  >
+                    {/* Image Container */}
+                    <div className="aspect-square w-full bg-muted relative">
+                      <Image
+                        src={asset.cdnImage || asset.image}
+                        alt={asset.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                      />
+                      {/* Badge: NFT ID */}
+                      <div className="absolute top-2 right-2">
+                        <span className="px-2 py-1 rounded-md text-[10px] font-bold font-mono text-white shadow-sm backdrop-blur-sm bg-black/60">
+                          #{asset.tokenId}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="p-3 space-y-2">
+                      <h3 className="font-semibold leading-none tracking-tight truncate text-xs md:text-sm">
+                        {asset.name}
+                      </h3>
+                      <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                          Floor
+                        </span>
+                        <div
+                          className={cn(
+                            'text-right',
+                            isPrivacyMode && 'blur-sm'
+                          )}
+                        >
+                          {/* RON Price */}
+                          <div className="text-xs font-medium">
+                            <span className="font-semibold text-xs md:text-sm text-white">
+                              {whole}
+                            </span>
+                            <span className="text-muted-foreground text-[9px] md:text-[10px] ml-[1px]">
+                              {decimal} RON
+                            </span>
+                          </div>
+                          {/* USD Price */}
+                          <div className="text-[10px] text-muted-foreground/80 font-mono -mt-0.5">
+                            {formatUsd(asset.floorPrice)}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
-            <div className="h-full min-h-[140px] flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg bg-muted/20">
+            <div className="h-full min-h-[140px] flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border rounded-xl bg-card/50">
               <IconBox className="w-8 h-8 opacity-20 mb-2" />
               <p className="text-sm">No assets found</p>
             </div>
@@ -248,9 +256,13 @@ function OverviewSkeleton() {
         <CardHeader>
           <Skeleton className="h-6 w-32" />
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
+        <CardContent className="space-y-6">
+          <div className="flex justify-between">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-10 w-20" />
+          </div>
+          <Skeleton className="h-4 w-full rounded-full" />
+          <Skeleton className="h-4 w-full" />
         </CardContent>
       </Card>
       <Card className="col-span-4">
@@ -258,9 +270,21 @@ function OverviewSkeleton() {
           <Skeleton className="h-6 w-32" />
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="aspect-square w-full rounded-lg" />
+              <div
+                key={i}
+                className="rounded-xl border border-border bg-card overflow-hidden"
+              >
+                <Skeleton className="aspect-square w-full rounded-none" />
+                <div className="p-3 space-y-2">
+                  <Skeleton className="h-3 w-3/4" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-8" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </CardContent>
