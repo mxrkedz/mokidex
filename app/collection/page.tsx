@@ -18,7 +18,7 @@ import {
   SortOption,
 } from '@/components/collection/collection-toolbar';
 import { CollectionGrid } from '@/components/collection/collection-grid';
-import { AssetModal } from '@/components/dashboard/asset-modal';
+import { AssetModal } from '@/components/shared/asset-modal';
 import { ImportWalletModal } from '@/components/collection/import-wallet-modal';
 
 // UI Components
@@ -33,7 +33,6 @@ import {
 } from '@tabler/icons-react';
 
 export default function CollectionPage() {
-  const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
   const [isDarkMode, setIsDarkMode] = React.useState(true);
 
   // Data State
@@ -83,9 +82,9 @@ export default function CollectionPage() {
       // Mobile (usually < 768px) is 2 columns. 16 is divisible by 2.
       // Desktop (xl) is 5 columns. 15 is divisible by 5.
       if (window.innerWidth < 768) {
-        setItemsPerPage(16);
+        setItemsPerPage(26);
       } else {
-        setItemsPerPage(15);
+        setItemsPerPage(25);
       }
     };
 
@@ -210,9 +209,6 @@ export default function CollectionPage() {
                 <CollectionHeader
                   totalRonValue={totalPortfolioValue}
                   ronPriceUsd={ronPrice.usdPrice}
-                  portfolioChange24h={0}
-                  isPrivacyMode={isPrivacyMode}
-                  setIsPrivacyMode={setIsPrivacyMode}
                   onRefresh={loadInitialData}
                   isRefreshing={isLoading}
                   isLoading={isLoading}
@@ -245,7 +241,6 @@ export default function CollectionPage() {
                     className="mt-0 focus-visible:outline-none"
                   >
                     <CollectionOverview
-                      isPrivacyMode={isPrivacyMode}
                       assets={assets}
                       isLoading={isLoading}
                       ronPrice={ronPrice.usdPrice}
@@ -267,9 +262,9 @@ export default function CollectionPage() {
                         >
                           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                             <TabsList>
-                              <TabsTrigger value="All">All Items</TabsTrigger>
-                              <TabsTrigger value="Moki">Moki</TabsTrigger>
-                              <TabsTrigger value="Booster">Booster</TabsTrigger>
+                              <TabsTrigger value="All">All</TabsTrigger>
+                              <TabsTrigger value="Moki">Moki Genesis</TabsTrigger>
+                              <TabsTrigger value="Booster">GA Booster Box</TabsTrigger>
                             </TabsList>
 
                             <CollectionToolbar

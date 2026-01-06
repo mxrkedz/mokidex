@@ -61,7 +61,8 @@ export function AssetModal({
         .then((offer) => setBestOffer(offer))
         .finally(() => setIsLoadingOffer(false));
     }
-  }, [isOpen, asset?.id]);
+    // Fixed: Added 'asset' to dependency array to satisfy ESLint
+  }, [isOpen, asset]);
 
   const getMarketplaceUrl = (currentAsset: RealNFT) => {
     if (currentAsset.contractType === 'Booster') {
@@ -241,7 +242,8 @@ export function AssetModal({
                         className="flex flex-col p-3 rounded-md border border-border bg-card/50"
                       >
                         <span className="text-[10px] uppercase text-muted-foreground font-semibold mb-1 truncate">
-                          {attr.trait_type || attr.key}
+                          {/* Fixed: Removed attr.trait_type because it does not exist on RoninAttribute */}
+                          {attr.key}
                         </span>
                         <span className="font-medium text-foreground truncate">
                           {attr.value}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/page.tsx
 'use client';
 
@@ -28,6 +29,7 @@ import {
   IconMail,
   IconTransfer,
 } from '@tabler/icons-react';
+import Image from 'next/image';
 
 export default function DashboardPage() {
   const [isDarkMode, setIsDarkMode] = React.useState(true);
@@ -75,9 +77,13 @@ export default function DashboardPage() {
 
               {/* RON Price Ticker */}
               <div className="flex items-center gap-3 bg-secondary/30 px-4 py-2 rounded-xl border border-border/50 shadow-sm">
-                <div className="p-2 bg-blue-500/10 rounded-full">
-                  <IconCurrencyDollar className="w-5 h-5 text-blue-500" />
-                </div>
+                <Image
+                  src="/Ronin_Mark_Blue.svg"
+                  alt="RON"
+                  width={20}
+                  height={20}
+                  className="w-10 h-10"
+                />
                 <div>
                   <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                     RON Price
@@ -357,14 +363,16 @@ function ActivityFeed({
                       >
                         <div className="relative h-10 w-10 rounded-md overflow-hidden bg-secondary flex-shrink-0">
                           {item.image ? (
-                            <img
+                            <Image
                               src={item.image}
                               alt={item.name}
+                              width={500}
+                              height={500}
                               className="object-cover w-full h-full"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-muted text-[8px] text-muted-foreground">
-                              IMG
+                              {item.name}
                             </div>
                           )}
                         </div>

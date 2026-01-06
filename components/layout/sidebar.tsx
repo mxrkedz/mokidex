@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { IconPin } from '@tabler/icons-react';
 import { NAV_ITEMS } from '@/lib/constants';
+import Image from 'next/image';
 
 // Removed SidebarProps interface
 
@@ -31,8 +32,13 @@ export function Sidebar() {
               : 'group-hover:w-10 group-hover:justify-start'
           )}
         >
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shadow-md shrink-0">
-            <span className="font-bold text-primary-foreground">M</span>
+          <div className="h-8 w-8 rounded-full flex items-center justify-center shadow-md shrink-0">
+            <Image
+              src="/mokidex logo.svg"
+              alt="MokiDex Logo"
+              width={32}
+              height={32}
+            />
           </div>
         </div>
 
@@ -42,7 +48,7 @@ export function Sidebar() {
             isPinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           )}
         >
-          MokiDex
+          Mokidex
         </h1>
 
         <Button

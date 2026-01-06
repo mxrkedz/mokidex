@@ -6,7 +6,11 @@ import Image from 'next/image';
 import { RealNFT } from '@/lib/nft-types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { IconChevronLeft, IconChevronRight, IconBox } from '@tabler/icons-react';
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconBox,
+} from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 
 interface CollectionGridProps {

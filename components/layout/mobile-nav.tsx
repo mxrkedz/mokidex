@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { IconMenu2 } from '@tabler/icons-react';
 import { NAV_ITEMS } from '@/lib/constants';
+import Image from 'next/image';
 
 // Removed MobileNavProps interface
 
@@ -23,10 +24,15 @@ export function MobileNav() {
   return (
     <header className="md:hidden h-16 border-b border-border bg-card/50 backdrop-blur-xl flex items-center justify-between px-4 shrink-0 z-50">
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shadow-md">
-          <span className="font-bold text-primary-foreground">M</span>
+        <div className="h-8 w-8 rounded-full flex items-center justify-center shadow-md">
+          <Image
+            src="/mokidex logo.svg"
+            alt="MokiDex Logo"
+            width={32}
+            height={32}
+          />
         </div>
-        <span className="font-bold text-lg tracking-tight">MokiDex</span>
+        <span className="font-bold text-lg tracking-tight">Mokidex</span>
       </div>
 
       <DropdownMenu>

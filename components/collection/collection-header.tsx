@@ -33,7 +33,6 @@ export function CollectionHeader({
   onRefresh,
   isRefreshing,
   isLoading = false,
-  timeRange,
   onImportWallet,
   walletAddress,
   portfolioName,

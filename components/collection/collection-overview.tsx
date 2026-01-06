@@ -89,7 +89,7 @@ export function CollectionOverview({
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
             <IconChartPie className="w-5 h-5 text-primary" />
-            Holdings Breakdown
+            Mokullection Breakdown
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col justify-center space-y-8">
@@ -158,8 +158,8 @@ export function CollectionOverview({
       <Card className="col-span-full md:col-span-4 flex flex-col h-full shadow-sm">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
-            <IconTrophy className="w-5 h-5 text-yellow-500" />
-            Most Valuable
+            <IconTrophy className="w-5 h-5 text-primary" />
+            Top Assets
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">

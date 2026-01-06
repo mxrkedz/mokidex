@@ -1,10 +1,7 @@
 import {
   IconLayoutDashboard,
-  IconDeviceGamepad2,
-  IconChartBar,
-  IconBuildingStore,
-  IconTrophy,
   IconCircleX,
+  IconBubble,
 } from '@tabler/icons-react';
 import { MokuAsset, Rarity, TimeRange } from './types';
 
@@ -137,10 +134,10 @@ export const RARITY_COLORS: Record<Rarity, string> = {
 export const NAV_ITEMS = [
   { name: 'Dashboard', icon: IconLayoutDashboard, href: '/' },
   { name: 'Mokullection', icon: IconCircleX, href: '/collection' },
-  { name: 'Deck Builder', icon: IconDeviceGamepad2, href: '#' },
-  { name: 'Arena Stats', icon: IconChartBar, href: '#' },
-  { name: 'Marketplace', icon: IconBuildingStore, href: '#' },
-  { name: 'Leaderboard', icon: IconTrophy, href: '#' },
+  { name: 'Feedback', icon: IconBubble, href: '#' },
+  // { name: 'Arena Stats', icon: IconChartBar, href: '#' },
+  // { name: 'Marketplace', icon: IconBuildingStore, href: '#' },
+  // { name: 'Leaderboard', icon: IconTrophy, href: '#' },
 ];
 
 export const SUPPORT_ADDRESS = '0x387aa341db18fc0b4e685ecbcbe0ad775f5c760b';

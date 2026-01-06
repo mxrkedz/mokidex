@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/actions/fetch-dashboard.ts
 'use server';
 
@@ -259,7 +260,8 @@ export async function fetchDashboardData() {
         const image =
           token?.erc721CdnImage || token?.erc721Image || token?.erc1155CdnImage;
 
-        let priceWei = item.metadata?.price || item.metadata?.item_price || '0';
+        const priceWei =
+          item.metadata?.price || item.metadata?.item_price || '0';
         const price = Number(priceWei) / 1e18;
 
         return {

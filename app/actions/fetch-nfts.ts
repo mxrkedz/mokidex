@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/actions/fetch-nfts.ts
 'use server';
 
