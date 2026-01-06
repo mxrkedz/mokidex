@@ -1,264 +1,268 @@
+// components/collection/collection-overview.tsx
 'use client';
 
 import * as React from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartConfig,
-} from '@/components/ui/chart';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { IconCircleX, IconPackage } from '@tabler/icons-react';
 import { RealNFT } from '@/lib/nft-types';
-import { TimeRange } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const chartConfig = {
-  value: { label: 'Value (RON)', color: '#2563eb' },
-} satisfies ChartConfig;
+import { IconBox, IconChartPie, IconTrophy } from '@tabler/icons-react';
+import { cn } from '@/lib/utils';
 
 interface CollectionOverviewProps {
-  isPrivacyMode: boolean;
   assets: RealNFT[];
-  historyData: { shortDate: string; fullDate: string; value: number }[];
-  timeRange: TimeRange;
-  setTimeRange: (range: TimeRange) => void;
-  isLoading?: boolean;
-  isHistoryLoading?: boolean;
+  isLoading: boolean;
+  isPrivacyMode: boolean;
 }
 
 export function CollectionOverview({
-  isPrivacyMode,
   assets,
-  historyData,
-  timeRange,
-  setTimeRange,
   isLoading,
-  isHistoryLoading,
+  isPrivacyMode,
 }: CollectionOverviewProps) {
-  // Calculate Counts
-  const mokiCount = assets.filter((a) => a.contractType === 'Moki').length;
-  const boosterCount = assets.filter(
-    (a) => a.contractType === 'Booster'
-  ).length;
-  const totalCount = assets.length;
+  const [topFilter, setTopFilter] = React.useState('All');
 
-  const statsItems = [
-    {
-      label: 'Moki NFT',
-      count: mokiCount,
-      icon: IconCircleX,
-      color: 'text-yellow-400',
-      bg: 'bg-yellow-400/10',
-    },
-    {
-      label: 'Booster Box',
-      count: boosterCount,
-      icon: IconPackage,
-      color: 'text-purple-400',
-      bg: 'bg-purple-400/10',
-    },
-  ];
+  // --- Calculations ---
+  const stats = React.useMemo(() => {
+    const totalValue = assets.reduce((acc, curr) => acc + curr.floorPrice, 0);
+    const mokiAssets = assets.filter((a) => a.contractType === 'Moki');
+    const boosterAssets = assets.filter((a) => a.contractType === 'Booster');
+
+    const mokiValue = mokiAssets.reduce(
+      (acc, curr) => acc + curr.floorPrice,
+      0
+    );
+    const boosterValue = boosterAssets.reduce(
+      (acc, curr) => acc + curr.floorPrice,
+      0
+    );
+
+    return {
+      totalValue: totalValue || 1, // Prevent div by zero
+      mokiCount: mokiAssets.length,
+      boosterCount: boosterAssets.length,
+      mokiValue,
+      boosterValue,
+      mokiPercent: (mokiValue / (totalValue || 1)) * 100,
+      boosterPercent: (boosterValue / (totalValue || 1)) * 100,
+    };
+  }, [assets]);
+
+  const topAssets = React.useMemo(() => {
+    let filtered = [...assets];
+    if (topFilter === 'Moki') {
+      filtered = filtered.filter((a) => a.contractType === 'Moki');
+    } else if (topFilter === 'Booster') {
+      filtered = filtered.filter((a) => a.contractType === 'Booster');
+    }
+    // Sort by Floor Price Descending
+    return filtered.sort((a, b) => b.floorPrice - a.floorPrice).slice(0, 4);
+  }, [assets, topFilter]);
+
+  if (isLoading) {
+    return <OverviewSkeleton />;
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* LEFT: Inventory Status */}
-      <Card className="lg:col-span-1 h-full flex flex-col">
-        <CardHeader>
-          <CardTitle>Mokullection Status</CardTitle>
-          <CardDescription>Asset distribution</CardDescription>
+    <div className="grid gap-4 md:grid-cols-7 lg:grid-cols-7">
+      {/* --- LEFT: Holdings Breakdown (3 Cols) --- */}
+      <Card className="col-span-full md:col-span-3 flex flex-col">
+        <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
+          <CardTitle className="text-lg font-medium flex items-center gap-2">
+            <IconChartPie className="w-5 h-5 text-primary" />
+            Holdings Breakdown
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 flex-1">
-          {statsItems.map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`h-10 w-10 rounded-md flex items-center justify-center ${item.bg}`}
-                >
-                  <item.icon className={`h-5 w-5 ${item.color}`} />
+        <CardContent className="flex-1 space-y-6 pt-4">
+          {/* Moki Stat */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-primary" />
+                <span className="font-medium text-muted-foreground">
+                  Moki NFTs
+                </span>
+              </div>
+              <div className="text-right">
+                <div className="font-bold">
+                  {isPrivacyMode
+                    ? '****'
+                    : `${stats.mokiValue.toLocaleString()} RON`}
                 </div>
-                <span className="font-medium">{item.label}</span>
+                <div className="text-xs text-muted-foreground">
+                  {stats.mokiCount} Items
+                </div>
               </div>
-              <span className="text-xl font-bold">
-                {isLoading ? <Skeleton className="h-6 w-8" /> : item.count}
-              </span>
             </div>
-          ))}
+            <Progress value={stats.mokiPercent} className="h-2 bg-secondary" />
+          </div>
 
-          <div className="pt-4 mt-2 border-t border-border">
-            <div className="flex justify-between text-sm text-muted-foreground mb-1">
-              <span>Total Items</span>
-              <span>
-                {isLoading ? (
-                  <Skeleton className="h-4 w-8 inline-block" />
-                ) : (
-                  totalCount
-                )}
+          {/* Booster Stat */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-purple-500" />
+                <span className="font-medium text-muted-foreground">
+                  Booster Boxes
+                </span>
+              </div>
+              <div className="text-right">
+                <div className="font-bold">
+                  {isPrivacyMode
+                    ? '****'
+                    : `${stats.boosterValue.toLocaleString()} RON`}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {stats.boosterCount} Items
+                </div>
+              </div>
+            </div>
+            <Progress
+              value={stats.boosterPercent}
+              className="h-2 bg-secondary [&>div]:bg-purple-500"
+            />
+          </div>
+
+          {/* Total Summary */}
+          <div className="pt-4 border-t mt-auto">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Allocation</span>
+              <span className="text-sm font-mono text-muted-foreground">
+                {stats.mokiPercent.toFixed(1)}% Moki /{' '}
+                {stats.boosterPercent.toFixed(1)}% Box
               </span>
             </div>
-            {isLoading ? (
-              <Skeleton className="w-full h-2 rounded-full" />
-            ) : (
-              <div className="w-full bg-muted rounded-full h-2 overflow-hidden flex">
-                <div
-                  className="bg-yellow-400 h-full transition-all duration-500"
-                  style={{
-                    width: `${
-                      totalCount > 0 ? (mokiCount / totalCount) * 100 : 0
-                    }%`,
-                  }}
-                />
-                <div
-                  className="bg-purple-400 h-full transition-all duration-500"
-                  style={{
-                    width: `${
-                      totalCount > 0 ? (boosterCount / totalCount) * 100 : 0
-                    }%`,
-                  }}
-                />
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* RIGHT: Portfolio History Chart */}
-      <Card className="lg:col-span-2 flex flex-col">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
-          <div className="space-y-1">
-            <CardTitle>Mokullection History</CardTitle>
-            <CardDescription>
-              {isLoading || isHistoryLoading
-                ? 'Updating data...'
-                : 'Value fluctuation (RON)'}
-            </CardDescription>
-          </div>
+      {/* --- RIGHT: Top Assets (4 Cols) --- */}
+      <Card className="col-span-full md:col-span-4 flex flex-col">
+        <CardHeader className="pb-2 space-y-0 flex flex-row items-center justify-between">
+          <CardTitle className="text-lg font-medium flex items-center gap-2">
+            <IconTrophy className="w-5 h-5 text-yellow-500" />
+            Top Assets
+          </CardTitle>
           <Tabs
-            value={timeRange}
-            onValueChange={(val) => setTimeRange(val as TimeRange)}
-            className="w-full sm:w-auto"
+            value={topFilter}
+            onValueChange={setTopFilter}
+            className="w-auto"
           >
-            <TabsList className="grid w-full grid-cols-4 sm:w-64 h-8">
-              <TabsTrigger value="24h" className="text-xs">
-                24h
-              </TabsTrigger>
-              <TabsTrigger value="7d" className="text-xs">
-                7d
-              </TabsTrigger>
-              <TabsTrigger value="30d" className="text-xs">
-                30d
-              </TabsTrigger>
-              <TabsTrigger value="All" className="text-xs">
+            <TabsList className="h-8 p-0 bg-secondary/50">
+              <TabsTrigger
+                value="All"
+                className="h-full px-3 text-xs data-[state=active]:bg-background rounded-sm"
+              >
                 All
+              </TabsTrigger>
+              <TabsTrigger
+                value="Moki"
+                className="h-full px-3 text-xs data-[state=active]:bg-background rounded-sm"
+              >
+                Moki
+              </TabsTrigger>
+              <TabsTrigger
+                value="Booster"
+                className="h-full px-3 text-xs data-[state=active]:bg-background rounded-sm"
+              >
+                Box
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
+        <CardContent className="pt-4 flex-1">
+          {topAssets.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {topAssets.map((asset) => (
+                <div
+                  key={asset.id}
+                  className="group relative flex flex-col rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 overflow-hidden"
+                >
+                  {/* Image Area */}
+                  <div className="aspect-square relative bg-secondary/20 overflow-hidden">
+                    <img
+                      src={asset.cdnImage || asset.image}
+                      alt={asset.name}
+                      className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                    {/* Rarity Badge */}
+                    <div className="absolute top-1 right-1">
+                      <span
+                        className="px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider text-white shadow-sm backdrop-blur-md"
+                        style={{ backgroundColor: asset.color }}
+                      >
+                        {asset.rarityLabel}
+                      </span>
+                    </div>
+                  </div>
 
-        <CardContent className="pl-0 pb-0 flex-1 min-h-[300px]">
-          {isLoading || isHistoryLoading ? (
-            <div className="w-full h-full p-4 flex flex-col items-end gap-2">
-              {/* Mimic Chart Axis and Line (Area Chart Style) */}
-              <div className="flex-1 w-full flex items-end gap-0 border-l border-b border-muted pb-2 pl-2">
-                <Skeleton className="h-[40%] flex-1 rounded-none rounded-tl-sm" />
-                <Skeleton className="h-[60%] flex-1 rounded-none" />
-                <Skeleton className="h-[50%] flex-1 rounded-none" />
-                <Skeleton className="h-[70%] flex-1 rounded-none" />
-                <Skeleton className="h-[80%] flex-1 rounded-none" />
-                <Skeleton className="h-[65%] flex-1 rounded-none" />
-                <Skeleton className="h-[90%] flex-1 rounded-none rounded-tr-sm" />
-              </div>
+                  {/* Info Area */}
+                  <div className="p-2 space-y-1">
+                    <h3
+                      className="font-semibold text-xs truncate"
+                      title={asset.name}
+                    >
+                      {asset.name}
+                    </h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">
+                        Floor
+                      </span>
+                      <span
+                        className={cn(
+                          'text-[11px] font-bold font-mono',
+                          isPrivacyMode ? 'blur-sm' : ''
+                        )}
+                        style={{
+                          color:
+                            asset.floorPrice > 1000 ? '#4ade80' : undefined,
+                        }}
+                      >
+                        {isPrivacyMode
+                          ? '999'
+                          : asset.floorPrice.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <ChartContainer
-              config={chartConfig}
-              className="h-full w-full aspect-auto"
-            >
-              <AreaChart
-                accessibilityLayer
-                data={historyData}
-                margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
-              >
-                <defs>
-                  <linearGradient id="fillValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-value)"
-                      stopOpacity={0.6}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-value)"
-                      stopOpacity={0.1}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  vertical={false}
-                  strokeDasharray="3 3"
-                  className="stroke-muted"
-                />
-
-                <XAxis
-                  dataKey="shortDate"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  fontSize={12}
-                  stroke="#888888"
-                  minTickGap={32}
-                />
-
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  fontSize={12}
-                  stroke="#888888"
-                  hide={isPrivacyMode}
-                  tickFormatter={(value) => `${value.toLocaleString()}`}
-                  domain={['auto', 'auto']}
-                />
-
-                <ChartTooltip
-                  cursor={false}
-                  content={
-                    <ChartTooltipContent
-                      indicator="dot"
-                      hideLabel
-                      labelFormatter={(value, payload) => {
-                        if (payload && payload.length > 0) {
-                          return payload[0].payload.fullDate;
-                        }
-                        return value;
-                      }}
-                    />
-                  }
-                />
-
-                <Area
-                  dataKey="value"
-                  type="monotone"
-                  animationDuration={1500}
-                  fill="url(#fillValue)"
-                  fillOpacity={1}
-                  stroke="var(--color-value)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ChartContainer>
+            <div className="h-full min-h-[140px] flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg bg-muted/20">
+              <IconBox className="w-8 h-8 opacity-20 mb-2" />
+              <p className="text-sm">No assets found</p>
+            </div>
           )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-7">
+      <Card className="col-span-3">
+        <CardHeader>
+          <Skeleton className="h-6 w-32" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </CardContent>
+      </Card>
+      <Card className="col-span-4">
+        <CardHeader>
+          <Skeleton className="h-6 w-32" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="aspect-square w-full rounded-lg" />
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

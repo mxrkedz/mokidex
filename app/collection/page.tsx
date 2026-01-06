@@ -5,16 +5,14 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { fetchWalletNFTs } from '@/app/actions/fetch-nfts';
 import { fetchRonPrice } from '@/app/actions/fetch-ron-price';
-import { fetchHistoricalPrices } from '@/app/actions/fetch-history';
 import { RealNFT } from '@/lib/nft-types';
-import { TimeRange } from '@/lib/types';
 
 // Layout & Components
 import { Sidebar } from '@/components/layout/sidebar';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { Footer } from '@/components/layout/footer';
 import { CollectionHeader } from '@/components/collection/collection-header';
-import { CollectionOverview } from '@/components/collection/collection-overview';
+import { CollectionOverview } from '@/components/collection/collection-overview'; // Uses the new unified component
 import {
   CollectionToolbar,
   SortOption,
@@ -28,9 +26,6 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { IconWallet, IconDownload } from '@tabler/icons-react';
-
-const MOKI_CONTRACT = '0x47b5a7c2e4f07772696bbf8c8c32fe2b9eabd550';
-const BOOSTER_CONTRACT = '0x3a3ea46230688a20ee45ec851dc81f76371f1235';
 
 export default function CollectionPage() {
   const [isPrivacyMode, setIsPrivacyMode] = React.useState(false);
@@ -46,17 +41,9 @@ export default function CollectionPage() {
   const [isAuthChecking, setIsAuthChecking] = React.useState(true);
   const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
 
-  // Chart Data State
-  const [historyData, setHistoryData] = React.useState<
-    { shortDate: string; fullDate: string; value: number }[]
-  >([]);
-
-  const [portfolioChange24h, setPortfolioChange24h] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [isHistoryLoading, setIsHistoryLoading] = React.useState(false);
 
   // Filters & UI State
-  const [timeRange, setTimeRange] = React.useState<TimeRange>('7d');
   const [activeTab, setActiveTab] = React.useState('All');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [sortOption, setSortOption] =
@@ -84,7 +71,7 @@ export default function CollectionPage() {
     localStorage.setItem('userPortfolioName', name);
   };
 
-  // 2. Initial Load Data
+  // 2. Load Data
   const loadInitialData = React.useCallback(async () => {
     if (!walletAddress) return;
 
@@ -97,7 +84,7 @@ export default function CollectionPage() {
       setAssets(fetchedAssets);
       setRonPrice(fetchedPrice);
     } catch (e) {
-      console.error('Failed to load initial data:', e);
+      console.error('Failed to load data:', e);
     } finally {
       setIsLoading(false);
     }
@@ -115,104 +102,6 @@ export default function CollectionPage() {
     setPortfolioName('');
     localStorage.removeItem('userPortfolioName');
   };
-
-  // 3. History Load
-  React.useEffect(() => {
-    if (assets.length === 0) return;
-
-    const loadHistory = async () => {
-      setIsHistoryLoading(true);
-      try {
-        const totalCurrentMokiValue = assets
-          .filter((a) => a.contractType === 'Moki')
-          .reduce((acc, curr) => acc + curr.floorPrice, 0);
-
-        const totalCurrentBoosterValue = assets
-          .filter((a) => a.contractType === 'Booster')
-          .reduce((acc, curr) => acc + curr.floorPrice, 0);
-
-        const [mokiHistory, boosterHistory] = await Promise.all([
-          fetchHistoricalPrices(MOKI_CONTRACT, timeRange),
-          fetchHistoricalPrices(BOOSTER_CONTRACT, timeRange),
-        ]);
-
-        const latestMoki = mokiHistory[mokiHistory.length - 1];
-        const latestBooster = boosterHistory[boosterHistory.length - 1];
-
-        const currentMokiFloor = latestMoki ? latestMoki.price : 1;
-        const currentBoosterFloor = latestBooster ? latestBooster.price : 1;
-
-        const timestampSet = new Set<string>();
-        mokiHistory.forEach((h) => timestampSet.add(h.date));
-        boosterHistory.forEach((h) => timestampSet.add(h.date));
-
-        const sortedTimestamps = Array.from(timestampSet).sort(
-          (a, b) => new Date(a).getTime() - new Date(b).getTime()
-        );
-
-        const combinedData = sortedTimestamps.map((timestamp) => {
-          const mPoint = mokiHistory.find((h) => h.date === timestamp);
-          const bPoint = boosterHistory.find((h) => h.date === timestamp);
-
-          const mFloorAtT = mPoint ? mPoint.price : 0;
-          const bFloorAtT = bPoint ? bPoint.price : 0;
-
-          const mRatio =
-            currentMokiFloor > 0 ? mFloorAtT / currentMokiFloor : 0;
-          const bRatio =
-            currentBoosterFloor > 0 ? bFloorAtT / currentBoosterFloor : 0;
-
-          const totalValue =
-            totalCurrentMokiValue * mRatio + totalCurrentBoosterValue * bRatio;
-
-          const dateObj = new Date(timestamp);
-
-          let shortDate = '';
-          if (timeRange === '24h') {
-            shortDate = dateObj.toLocaleTimeString(undefined, {
-              hour: 'numeric',
-              minute: '2-digit',
-            });
-          } else {
-            shortDate = dateObj.toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-            });
-          }
-
-          const fullDate = dateObj.toLocaleString(undefined, {
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-          });
-
-          return {
-            shortDate,
-            fullDate,
-            value: totalValue,
-          };
-        });
-
-        const validData = combinedData.filter((d) => d.value > 0);
-        setHistoryData(validData);
-
-        if (validData.length > 1) {
-          const start = validData[0].value;
-          const end = validData[validData.length - 1].value;
-          if (start > 0) {
-            setPortfolioChange24h(((end - start) / start) * 100);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load history:', e);
-      } finally {
-        setIsHistoryLoading(false);
-      }
-    };
-
-    loadHistory();
-  }, [assets, timeRange]);
 
   const totalPortfolioValue = React.useMemo(() => {
     return assets.reduce((acc, curr) => acc + curr.floorPrice, 0);
@@ -286,27 +175,24 @@ export default function CollectionPage() {
                 <CollectionHeader
                   totalRonValue={totalPortfolioValue}
                   ronPriceUsd={ronPrice.usdPrice}
-                  portfolioChange24h={portfolioChange24h}
+                  portfolioChange24h={0}
                   isPrivacyMode={isPrivacyMode}
                   setIsPrivacyMode={setIsPrivacyMode}
                   onRefresh={loadInitialData}
                   isRefreshing={isLoading}
-                  isLoading={isLoading} // Added Prop
-                  timeRange={timeRange}
+                  isLoading={isLoading}
+                  timeRange={'24h'}
                   onImportWallet={() => setIsImportModalOpen(true)}
                   walletAddress={walletAddress}
                   portfolioName={portfolioName}
                   onUpdateName={handleUpdateName}
                 />
 
+                {/* Combined Overview: Holdings Breakdown + Top Assets */}
                 <CollectionOverview
                   isPrivacyMode={isPrivacyMode}
                   assets={assets}
-                  historyData={historyData}
-                  timeRange={timeRange}
-                  setTimeRange={setTimeRange}
-                  isLoading={isLoading} // Added Prop
-                  isHistoryLoading={isHistoryLoading} // Added Prop
+                  isLoading={isLoading}
                 />
 
                 <Card className="w-full">
@@ -337,7 +223,7 @@ export default function CollectionPage() {
                     <CollectionGrid
                       assets={filteredAssets}
                       itemsPerPage={15}
-                      isLoading={isLoading} // Added Prop
+                      isLoading={isLoading}
                       onCardClick={(asset) => {
                         setSelectedAsset(asset);
                         setIsDetailOpen(true);
