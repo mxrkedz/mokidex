@@ -39,7 +39,7 @@ export function Footer({
                 M
               </span>
             </div>
-            <span className="font-bold text-base tracking-tight">MokuDash</span>
+            <span className="font-bold text-base tracking-tight">MokiDex</span>
           </div>
 
           <div className="space-y-1">

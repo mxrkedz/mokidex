@@ -1,12 +1,12 @@
 import {
   IconLayoutDashboard,
-  IconCards,
   IconDeviceGamepad2,
   IconChartBar,
   IconBuildingStore,
   IconTrophy,
+  IconCircleX,
 } from '@tabler/icons-react';
-import { CardType, MokuAsset, Rarity, TimeRange } from './types';
+import { MokuAsset, Rarity, TimeRange } from './types';
 
 export const HISTORY_DATA: Record<
   TimeRange,
@@ -51,109 +51,59 @@ export const HISTORY_DATA: Record<
 export const RARITY_DISTRIBUTION = [
   {
     name: 'Card Rarity',
-    Common: 45,
-    Uncommon: 30,
-    Rare: 15,
-    Epic: 8,
-    Legendary: 2,
+    Common: 59,
+    Rainbow: 20,
+    Gold: 10,
+    Shadow: 7,
+    Spirit: 3,
+    '1 of 1': 1,
   },
 ];
 
+// Specific Floor Prices for Traits (in RON)
+// These values override the collection floor price multiplier logic.
+
 export const TOP_ASSETS: MokuAsset[] = [
   {
-    id: 'moki-1',
-    name: 'Dark Doodie',
-    rarity: 'Common',
+    id: 'moki-0',
+    name: 'The Origin',
+    rarity: '1 of 1',
     type: 'Moki',
-    floorPriceRon: 45,
-    stars: 2,
-    color: '#9ca3af',
-    description:
-      'A mysterious Moki shrouded in dark energy. Often found lurking in shadows, plotting its next move.',
+    floorPriceRon: 150000,
+    stars: 5,
+    color: '#dc2626',
+    description: 'The very first Moki ever created.',
     stats: [
-      { label: 'Element', value: 'Shadow' },
-      { label: 'Power', value: '120' },
-      { label: 'Artist', value: 'MOMOMOOING' },
+      { label: 'Element', value: 'Divine' },
+      { label: 'Type', value: '1 of 1' },
     ],
   },
   {
-    id: 'scheme-1',
-    name: 'Beat The Buzzer',
-    rarity: 'Rare',
-    type: 'Scheme',
-    floorPriceRon: 350,
-    stars: 3,
-    color: '#3b82f6',
-    description:
-      '+300 points when winning Gacha Ball delivered to base. A game-changing scheme for clutch moments.',
+    id: 'moki-1',
+    name: 'Dark Doodie',
+    rarity: 'Shadow',
+    type: 'Moki',
+    floorPriceRon: 22000,
+    stars: 4,
+    color: '#7c3aed',
+    description: 'A mysterious Moki shrouded in dark energy.',
     stats: [
-      { label: 'Effect', value: 'Score Boost' },
-      { label: 'Trigger', value: 'Delivery' },
-      { label: 'Artist', value: 'DELIRIUM + RXICHOO' },
+      { label: 'Element', value: 'Shadow' },
+      { label: 'Fur', value: 'Shadow' },
     ],
   },
   {
     id: 'moki-2',
-    name: 'Zesty Von Grump',
-    rarity: 'Rare',
+    name: 'Gilded Grump',
+    rarity: 'Gold',
     type: 'Moki',
-    floorPriceRon: 125,
-    stars: 2,
-    color: '#4ade80',
-    description:
-      'Always sour, always grumpy. This citrus-infused Moki brings a tangy attitude to the arena.',
+    floorPriceRon: 8500,
+    stars: 3,
+    color: '#eab308',
+    description: 'Shining bright with a heart of gold.',
     stats: [
-      { label: 'Element', value: 'Nature' },
-      { label: 'Attitude', value: 'Sour' },
-      { label: 'Artist', value: 'RXICHOO' },
-    ],
-  },
-  {
-    id: 'scheme-2',
-    name: 'Aggressive Specialization',
-    rarity: 'Uncommon',
-    type: 'Scheme',
-    floorPriceRon: 88,
-    stars: 2,
-    color: '#60a5fa',
-    description:
-      'Eliminations are worth double points. Delivering Gacha Balls is worth no Points. Pure combat focus.',
-    stats: [
-      { label: 'Effect', value: 'Combat Multiplier' },
-      { label: 'Penalty', value: 'No Delivery Pts' },
-      { label: 'Artist', value: 'DELIRIUM' },
-    ],
-  },
-  {
-    id: 'moki-3',
-    name: 'Duchess Doodle',
-    rarity: 'Epic',
-    type: 'Moki',
-    floorPriceRon: 850,
-    stars: 6,
-    color: '#a78bfa',
-    description:
-      'Royalty of the canvas. She paints her victory with broad strokes and an imperious gaze.',
-    stats: [
-      { label: 'Element', value: 'Arcane' },
-      { label: 'Rank', value: 'Nobility' },
-      { label: 'Artist', value: 'RXICHOO' },
-    ],
-  },
-  {
-    id: 'moki-4',
-    name: 'Master Nanner',
-    rarity: 'Epic',
-    type: 'Moki',
-    floorPriceRon: 920,
-    stars: 4,
-    color: '#fbbf24',
-    description:
-      'A master of disguise or just a fan of potassium? The mask hides a thousand secrets.',
-    stats: [
-      { label: 'Element', value: 'Light' },
-      { label: 'Weapon', value: 'Banana' },
-      { label: 'Artist', value: 'RXICHOO' },
+      { label: 'Element', value: 'Metal' },
+      { label: 'Fur', value: 'Gold' },
     ],
   },
 ];
@@ -173,74 +123,29 @@ export const RECENT_ACTIVITY = [
     time: '5h ago',
     positive: true,
   },
-  {
-    type: 'Minted',
-    item: 'Booster Pack',
-    price: '10 RON',
-    time: '1d ago',
-    positive: false,
-  },
-  {
-    type: 'Received',
-    item: 'Moku #999',
-    price: '-',
-    time: '2d ago',
-    positive: true,
-  },
 ];
 
 export const RARITY_COLORS: Record<Rarity, string> = {
-  Common: '#9ca3af',
-  Uncommon: '#86efac',
-  Rare: '#60a5fa',
-  Epic: '#a78bfa',
-  Legendary: '#fb923c',
+  Common: '#9ca3af', // Gray
+  Rainbow: '#f472b6', // Pink
+  Gold: '#eab308', // Gold
+  Shadow: '#7c3aed', // Violet
+  Spirit: '#06b6d4', // Cyan
+  '1 of 1': '#dc2626', // Red/Crimson
 };
 
 export const NAV_ITEMS = [
   { name: 'Dashboard', icon: IconLayoutDashboard, href: '/' },
-  { name: 'Collection', icon: IconCards, href: '/collection' },
-  { name: 'Deck Builder', icon: IconDeviceGamepad2, href: '#' }, // Placeholder
-  { name: 'Arena Stats', icon: IconChartBar, href: '#' }, // Placeholder
-  { name: 'Marketplace', icon: IconBuildingStore, href: '#' }, // Placeholder
-  { name: 'Leaderboard', icon: IconTrophy, href: '#' }, // Placeholder
+  { name: 'Mokullection', icon: IconCircleX, href: '/collection' },
+  { name: 'Deck Builder', icon: IconDeviceGamepad2, href: '#' },
+  { name: 'Arena Stats', icon: IconChartBar, href: '#' },
+  { name: 'Marketplace', icon: IconBuildingStore, href: '#' },
+  { name: 'Leaderboard', icon: IconTrophy, href: '#' },
 ];
 
-export const SUPPORT_ADDRESS = '0x61759fb5255532f8f977d0a51b7037651becac74';
+export const SUPPORT_ADDRESS = '0x387aa341db18fc0b4e685ecbcbe0ad775f5c760b';
 
 export const SHORT_ADDRESS = `${SUPPORT_ADDRESS.slice(
   0,
   6
 )}...${SUPPORT_ADDRESS.slice(-4)}`;
-
-export const ALL_MOCK_ASSETS: MokuAsset[] = Array.from({ length: 48 }).map(
-  (_, i) => {
-    const types: CardType[] = ['Moki', 'Scheme', 'Promo'];
-    const rarities: Rarity[] = [
-      'Common',
-      'Uncommon',
-      'Rare',
-      'Epic',
-      'Legendary',
-    ];
-    const colors = ['#9ca3af', '#86efac', '#60a5fa', '#a78bfa', '#fb923c'];
-
-    const rarityIndex = Math.floor(Math.random() * rarities.length);
-    const typeIndex = Math.floor(Math.random() * types.length);
-
-    return {
-      id: `asset-${1000 + i}`,
-      name: `Moku Card #${1000 + i}`,
-      rarity: rarities[rarityIndex],
-      type: types[typeIndex],
-      floorPriceRon: Math.floor(Math.random() * 500) + 10,
-      stars: Math.floor(Math.random() * 5) + 1,
-      color: colors[rarityIndex],
-      description: 'Generated mock card for collection view testing.',
-      stats: [
-        { label: 'Power', value: String(Math.floor(Math.random() * 100) + 50) },
-        { label: 'Speed', value: String(Math.floor(Math.random() * 10)) },
-      ],
-    };
-  }
-);

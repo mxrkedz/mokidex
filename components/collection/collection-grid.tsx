@@ -1,25 +1,29 @@
 'use client';
 
 import * as React from 'react';
-import { MokuAsset } from '@/lib/types';
-import { ThreeDCard } from '@/components/shared/three-d-card';
+import Image from 'next/image';
+import { RealNFT } from '@/lib/nft-types';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { cn } from '@/lib/utils';
 
 interface CollectionGridProps {
-  assets: MokuAsset[];
+  assets: RealNFT[];
   itemsPerPage?: number;
-  onCardClick: (asset: MokuAsset) => void;
+  onCardClick: (asset: RealNFT) => void;
+  isLoading?: boolean; // Added isLoading prop
 }
 
 export function CollectionGrid({
   assets,
-  itemsPerPage = 12,
+  itemsPerPage = 25,
   onCardClick,
+  isLoading = false,
 }: CollectionGridProps) {
   const [currentPage, setCurrentPage] = React.useState(1);
 
-  // Reset page when data changes (e.g. filtering)
   React.useEffect(() => {
     setCurrentPage(1);
   }, [assets.length]);
@@ -28,34 +32,116 @@ export function CollectionGrid({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentAssets = assets.slice(startIndex, startIndex + itemsPerPage);
 
+  // Helper to split price for styling
+  const getPriceParts = (price: number) => {
+    const str = price.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+    const parts = str.split('.');
+    return {
+      whole: parts[0],
+      decimal: parts[1] ? `.${parts[1]}` : '',
+    };
+  };
+
+  // -- Loading Skeleton State --
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl border border-border bg-card overflow-hidden"
+            >
+              <Skeleton className="aspect-square w-full rounded-none" />
+              <div className="p-4 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-10 rounded-full" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (assets.length === 0) {
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border rounded-xl bg-card/50">
-        <p>No cards found.</p>
-        <span className="text-xs mt-1">Try adjusting your filters.</span>
+        <p>No Assets Found.</p>
+        <span className="text-xs mt-1">
+          Try adjusting your filters or importing a wallet.
+        </span>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {currentAssets.map((asset) => (
-          // Wrapper to capture click and constrain size
-          <div
-            key={asset.id}
-            className="aspect-[4/5] cursor-pointer group perspective-1000"
-            onClick={() => onCardClick(asset)}
-          >
-            <ThreeDCard asset={asset} />
-          </div>
-        ))}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {currentAssets.map((asset) => {
+          const { whole, decimal } = getPriceParts(asset.floorPrice || 0);
+
+          return (
+            <div
+              key={`${asset.contractAddress}-${asset.id}`}
+              onClick={() => onCardClick(asset)}
+              className={cn(
+                'group/card relative overflow-hidden rounded-xl border border-border bg-card hover:bg-muted/50 transition-all hover:scale-[1.02] cursor-pointer'
+              )}
+            >
+              {/* Image Container */}
+              <div className="aspect-square w-full bg-muted relative">
+                {asset.image ? (
+                  <Image
+                    src={asset.image}
+                    alt={asset.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 font-bold text-4xl uppercase tracking-widest select-none">
+                    {asset.rarity ? asset.rarity[0] : '?'}
+                  </div>
+                )}
+              </div>
+
+              {/* Content Area */}
+              <div className="p-4 space-y-2">
+                <h3 className="font-semibold leading-none tracking-tight truncate text-sm">
+                  {asset.name}
+                </h3>
+                <div className="flex items-center justify-between">
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] h-5 px-1.5 font-mono font-medium opacity-80"
+                  >
+                    #{asset.tokenId}
+                  </Badge>
+
+                  <div className="text-xs font-medium text-right">
+                    <span className="text-foreground font-semibold text-sm">
+                      {whole}
+                    </span>
+                    <span className="text-muted-foreground text-[10px] ml-[1px]">
+                      {decimal} RON
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 pt-8">
+        <div className="flex items-center justify-center gap-4 pt-8 border-t border-border mt-8">
           <Button
             variant="outline"
             size="icon"

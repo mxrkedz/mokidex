@@ -31,7 +31,6 @@ import {
 } from '@/lib/constants';
 import { TimeRange } from '@/lib/types';
 
-// Chart configurations local to this component
 const portfolioChartConfig = {
   value: {
     label: 'Value (RON)',
@@ -41,10 +40,11 @@ const portfolioChartConfig = {
 
 const rarityChartConfig = {
   Common: { label: 'Common', color: RARITY_COLORS.Common },
-  Uncommon: { label: 'Uncommon', color: RARITY_COLORS.Uncommon },
-  Rare: { label: 'Rare', color: RARITY_COLORS.Rare },
-  Epic: { label: 'Epic', color: RARITY_COLORS.Epic },
-  Legendary: { label: 'Legendary', color: RARITY_COLORS.Legendary },
+  Rainbow: { label: 'Rainbow', color: RARITY_COLORS.Rainbow },
+  Gold: { label: 'Gold', color: RARITY_COLORS.Gold },
+  Shadow: { label: 'Shadow', color: RARITY_COLORS.Shadow },
+  Spirit: { label: 'Spirit', color: RARITY_COLORS.Spirit },
+  '1 of 1': { label: '1 of 1', color: RARITY_COLORS['1 of 1'] },
 } satisfies ChartConfig;
 
 export function PortfolioCharts({ isPrivacyMode }: { isPrivacyMode: boolean }) {
@@ -52,7 +52,6 @@ export function PortfolioCharts({ isPrivacyMode }: { isPrivacyMode: boolean }) {
 
   return (
     <div className="space-y-8 lg:col-span-2 flex flex-col">
-      {/* Portfolio History Chart */}
       <Card className="flex-1 flex flex-col">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
           <div className="space-y-1">
@@ -144,7 +143,6 @@ export function PortfolioCharts({ isPrivacyMode }: { isPrivacyMode: boolean }) {
         </CardContent>
       </Card>
 
-      {/* Rarity Distribution Chart */}
       <Card>
         <CardHeader className="py-3">
           <CardTitle className="text-sm">Rarity Distribution</CardTitle>
@@ -178,30 +176,37 @@ export function PortfolioCharts({ isPrivacyMode }: { isPrivacyMode: boolean }) {
                   strokeWidth={2}
                 />
                 <Bar
-                  dataKey="Uncommon"
+                  dataKey="Rainbow"
                   stackId="a"
-                  fill="var(--color-Uncommon)"
+                  fill="var(--color-Rainbow)"
                   stroke="var(--background)"
                   strokeWidth={2}
                 />
                 <Bar
-                  dataKey="Rare"
+                  dataKey="Gold"
                   stackId="a"
-                  fill="var(--color-Rare)"
+                  fill="var(--color-Gold)"
                   stroke="var(--background)"
                   strokeWidth={2}
                 />
                 <Bar
-                  dataKey="Epic"
+                  dataKey="Shadow"
                   stackId="a"
-                  fill="var(--color-Epic)"
+                  fill="var(--color-Shadow)"
                   stroke="var(--background)"
                   strokeWidth={2}
                 />
                 <Bar
-                  dataKey="Legendary"
+                  dataKey="Spirit"
                   stackId="a"
-                  fill="var(--color-Legendary)"
+                  fill="var(--color-Spirit)"
+                  stroke="var(--background)"
+                  strokeWidth={2}
+                />
+                <Bar
+                  dataKey="1 of 1"
+                  stackId="a"
+                  fill="var(--color-1 of 1)"
                   radius={[0, 4, 4, 0]}
                   stroke="var(--background)"
                   strokeWidth={2}
