@@ -285,10 +285,13 @@ export async function fetchWalletNFTs(
 ): Promise<RealNFT[]> {
   if (!walletAddress) return [];
 
+  // FORCE LOWERCASE ADDRESS to handle caps lock/mixed case
+  const owner = walletAddress.toLowerCase();
+
   // 1. Fetch User Assets
   const [userMokis, userBoosters] = await Promise.all([
-    fetchAllUserTokens(walletAddress, MOKI_CONTRACT),
-    fetchAllUserTokens(walletAddress, BOOSTER_CONTRACT),
+    fetchAllUserTokens(owner, MOKI_CONTRACT),
+    fetchAllUserTokens(owner, BOOSTER_CONTRACT),
   ]);
 
   // 2. Fetch Market Floor Prices
