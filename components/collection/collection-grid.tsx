@@ -1,19 +1,24 @@
+// components/collection/collection-grid.tsx
 'use client';
 
 import * as React from 'react';
 import Image from 'next/image';
 import { RealNFT } from '@/lib/nft-types';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconBox,
+} from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 
 interface CollectionGridProps {
   assets: RealNFT[];
   itemsPerPage?: number;
   onCardClick: (asset: RealNFT) => void;
-  isLoading?: boolean; // Added isLoading prop
+  isLoading?: boolean;
+  ronPrice: number; // Added prop for USD conversion
 }
 
 export function CollectionGrid({
@@ -21,6 +26,7 @@ export function CollectionGrid({
   itemsPerPage = 25,
   onCardClick,
   isLoading = false,
+  ronPrice,
 }: CollectionGridProps) {
   const [currentPage, setCurrentPage] = React.useState(1);
 
@@ -45,6 +51,16 @@ export function CollectionGrid({
     };
   };
 
+  const formatUsd = (ronValue: number) => {
+    const val = ronValue * ronPrice;
+    return val.toLocaleString(undefined, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   // -- Loading Skeleton State --
   if (isLoading) {
     return (
@@ -56,11 +72,11 @@ export function CollectionGrid({
               className="rounded-xl border border-border bg-card overflow-hidden"
             >
               <Skeleton className="aspect-square w-full rounded-none" />
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-4 w-3/4" />
+              <div className="p-3 space-y-2">
+                <Skeleton className="h-3 w-3/4" />
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-5 w-10 rounded-full" />
-                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-4 w-12" />
                 </div>
               </div>
             </div>
@@ -73,6 +89,7 @@ export function CollectionGrid({
   if (assets.length === 0) {
     return (
       <div className="w-full h-64 flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border rounded-xl bg-card/50">
+        <IconBox className="w-10 h-10 opacity-20 mb-2" />
         <p>No Assets Found.</p>
         <span className="text-xs mt-1">
           Try adjusting your filters or importing a wallet.
@@ -92,14 +109,16 @@ export function CollectionGrid({
               key={`${asset.contractAddress}-${asset.id}`}
               onClick={() => onCardClick(asset)}
               className={cn(
-                'group/card relative overflow-hidden rounded-xl border border-border bg-card hover:bg-muted/50 transition-all hover:scale-[1.02] cursor-pointer'
+                'group/card relative overflow-hidden rounded-xl border border-border bg-card',
+                'hover:bg-muted/50 transition-all',
+                'hover:scale-[1.02] cursor-pointer'
               )}
             >
               {/* Image Container */}
               <div className="aspect-square w-full bg-muted relative">
                 {asset.image ? (
                   <Image
-                    src={asset.image}
+                    src={asset.cdnImage || asset.image}
                     alt={asset.name}
                     fill
                     className="object-cover"
@@ -107,31 +126,37 @@ export function CollectionGrid({
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 font-bold text-4xl uppercase tracking-widest select-none">
-                    {asset.rarity ? asset.rarity[0] : '?'}
+                    ?
                   </div>
                 )}
+                {/* Rarity Badge (Top Right) */}
+                <div className="absolute top-2 right-2">
+                  <span className="px-2 py-1 rounded-md text-[10px] font-bold font-mono text-white shadow-sm backdrop-blur-sm bg-black/60">
+                    #{asset.tokenId}
+                  </span>
+                </div>
               </div>
 
               {/* Content Area */}
-              <div className="p-4 space-y-2">
-                <h3 className="font-semibold leading-none tracking-tight truncate text-sm">
+              <div className="p-3 space-y-2">
+                <h3 className="font-semibold leading-none tracking-tight truncate text-xs md:text-sm">
                   {asset.name}
                 </h3>
-                <div className="flex items-center justify-between">
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] h-5 px-1.5 font-mono font-medium opacity-80"
-                  >
-                    #{asset.tokenId}
-                  </Badge>
-
-                  <div className="text-xs font-medium text-right">
-                    <span className="text-foreground font-semibold text-sm">
-                      {whole}
-                    </span>
-                    <span className="text-muted-foreground text-[10px] ml-[1px]">
-                      {decimal} RON
-                    </span>
+                <div className="flex items-center pt-1 border-t border-border/50">
+                  <div className="text-left">
+                    {/* RON Price */}
+                    <div className="text-xs font-medium">
+                      <span className="font-semibold text-xs md:text-sm text-white font-mono">
+                        {whole}
+                      </span>
+                      <span className="text-muted-foreground text-[9px] md:text-[10px] ml-[1px] font-mono">
+                        {decimal} RON
+                      </span>
+                    </div>
+                    {/* USD Price */}
+                    <div className="text-[10px] text-muted-foreground/80 -mt-0.5 font-mono">
+                      ≈ {formatUsd(asset.floorPrice)}
+                    </div>
                   </div>
                 </div>
               </div>
