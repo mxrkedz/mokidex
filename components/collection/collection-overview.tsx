@@ -6,14 +6,12 @@ import Image from 'next/image';
 import { RealNFT } from '@/lib/nft-types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import { IconChartPie, IconTrophy, IconBox } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 
 interface CollectionOverviewProps {
   assets: RealNFT[];
   isLoading: boolean;
-  isPrivacyMode: boolean;
   ronPrice: number;
   onCardClick?: (asset: RealNFT) => void;
 }
@@ -21,7 +19,6 @@ interface CollectionOverviewProps {
 export function CollectionOverview({
   assets,
   isLoading,
-  isPrivacyMode,
   ronPrice,
   onCardClick,
 }: CollectionOverviewProps) {
@@ -105,7 +102,7 @@ export function CollectionOverview({
                 Moki
               </div>
               <div className="text-2xl font-bold tracking-tight">
-                {isPrivacyMode ? '••••••' : `${stats.mokiPercent.toFixed(0)}%`}
+                {`${stats.mokiPercent.toFixed(0)}%`}
               </div>
               <div className="text-xs text-muted-foreground">
                 {stats.mokiCount} Items
@@ -118,7 +115,7 @@ export function CollectionOverview({
                 <div className="w-2 h-2 rounded-full bg-purple-500" />
               </div>
               <div className="text-2xl font-bold tracking-tight">
-                {isPrivacyMode ? '••••••' : `${stats.boosterPercent.toFixed(0)}%`}
+                {`${stats.boosterPercent.toFixed(0)}%`}
               </div>
               <div className="text-xs text-muted-foreground">
                 {stats.boosterCount} Items
@@ -145,16 +142,12 @@ export function CollectionOverview({
             <div className="flex justify-between items-center text-xs text-muted-foreground">
               <span>Total Allocation</span>
               <div className="text-right">
-                <div className="font-mono font-medium text-foreground">
-                  {isPrivacyMode
-                    ? '••••••'
-                    : `${stats.totalValue.toLocaleString()} RON`}
+                <div className="font-medium text-foreground font-mono">
+                  {`${stats.totalValue.toLocaleString()} RON`}
                 </div>
-                {!isPrivacyMode && (
-                  <div className="text-[10px] text-muted-foreground">
-                    {formatUsd(stats.totalValue)}
-                  </div>
-                )}
+                <div className="text-[10px] text-muted-foreground font-mono">
+                  {formatUsd(stats.totalValue)}
+                </div>
               </div>
             </div>
           </div>
@@ -196,7 +189,7 @@ export function CollectionOverview({
                       />
                       {/* Badge: NFT ID */}
                       <div className="absolute top-2 right-2">
-                        <span className="px-2 py-1 rounded-md text-[10px] font-bold font-mono text-white shadow-sm backdrop-blur-sm bg-black/60">
+                        <span className="px-2 py-1 rounded-md text-[10px] font-bold text-white shadow-sm backdrop-blur-sm bg-black/60">
                           #{asset.tokenId}
                         </span>
                       </div>
@@ -208,26 +201,18 @@ export function CollectionOverview({
                         {asset.name}
                       </h3>
                       <div className="flex items-center justify-between pt-1 border-t border-border/50">
-                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                          Floor
-                        </span>
-                        <div
-                          className={cn(
-                            'text-right',
-                            isPrivacyMode && 'blur-sm'
-                          )}
-                        >
+                        <div className="text-left">
                           {/* RON Price */}
                           <div className="text-xs font-medium">
-                            <span className="font-semibold text-xs md:text-sm text-white">
+                            <span className="font-semibold text-xs md:text-sm text-white font-mono">
                               {whole}
                             </span>
-                            <span className="text-muted-foreground text-[9px] md:text-[10px] ml-[1px]">
+                            <span className="text-muted-foreground text-[9px] md:text-[10px] ml-[1px] font-mono">
                               {decimal} RON
                             </span>
                           </div>
                           {/* USD Price */}
-                          <div className="text-[10px] text-muted-foreground/80 font-mono -mt-0.5">
+                          <div className="text-[10px] text-muted-foreground/80 -mt-0.5 font-mono">
                             {formatUsd(asset.floorPrice)}
                           </div>
                         </div>

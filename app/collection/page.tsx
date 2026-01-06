@@ -180,7 +180,7 @@ export default function CollectionPage() {
                 <CollectionHeader
                   totalRonValue={totalPortfolioValue}
                   ronPriceUsd={ronPrice.usdPrice}
-                  // REMOVED portfolioChange24h prop
+                  portfolioChange24h={0}
                   isPrivacyMode={isPrivacyMode}
                   setIsPrivacyMode={setIsPrivacyMode}
                   onRefresh={loadInitialData}
@@ -247,6 +247,7 @@ export default function CollectionPage() {
         onClose={setIsDetailOpen}
         asset={selectedAsset}
         isDarkMode={isDarkMode}
+        ronPrice={ronPrice.usdPrice}
       />
 
       <ImportWalletModal

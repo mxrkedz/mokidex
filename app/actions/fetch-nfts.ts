@@ -242,7 +242,7 @@ async function fetchAllUserTokens(owner: string, tokenAddress: string) {
     rangeCriteria: [],
     excludeAddress: undefined,
     includeLastSalePrice: true,
-    includeReceivedTimestamp: true, // IMPORTANT: Now True to get acquisition date
+    includeReceivedTimestamp: true,
     owner,
     tokenAddress,
   };
@@ -398,7 +398,6 @@ export async function fetchWalletNFTs(
       listingPrice: listingPrice > 0 ? listingPrice : undefined,
       change24h: 0,
       lastSale: parsePrice(token.lastSalePrice),
-      // Use receivedTimestamp if available, otherwise default to 0
       acquiredAt: token.receivedTimestamp
         ? parseInt(token.receivedTimestamp)
         : 0,
@@ -410,6 +409,21 @@ export async function fetchWalletNFTs(
 
   const mappedBoosters: RealNFT[] = userBoosters.map((token: any) => {
     const listingPrice = parsePrice(token.order?.currentPrice);
+
+    // FIXED: Parse Booster Attributes instead of empty array
+    let attributes: RoninAttribute[] = [];
+    if (token.attributes) {
+      if (Array.isArray(token.attributes)) {
+        attributes = token.attributes;
+      } else {
+        attributes = Object.entries(token.attributes).map(
+          ([key, values]: [string, any]) => ({
+            key: key,
+            value: Array.isArray(values) ? values[0] : values,
+          })
+        );
+      }
+    }
 
     return {
       id: `${token.tokenAddress}-${token.tokenId}`,
@@ -429,7 +443,7 @@ export async function fetchWalletNFTs(
       acquiredAt: token.receivedTimestamp
         ? parseInt(token.receivedTimestamp)
         : 0,
-      attributes: [],
+      attributes: attributes, // Now correctly passing attributes
       contractAddress: token.tokenAddress,
       color: '#a1a1aa',
     };

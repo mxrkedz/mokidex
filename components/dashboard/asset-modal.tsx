@@ -1,3 +1,4 @@
+// components/dashboard/asset-modal.tsx
 'use client';
 
 import * as React from 'react';
@@ -15,6 +16,7 @@ import { IconArrowsExchange } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 import { RealNFT } from '@/lib/nft-types';
 import { ThreeDCard } from '@/components/shared/three-d-card';
+import { fetchBestOffer } from '@/app/actions/fetch-offers';
 
 const RARITY_COLORS: Record<string, string> = {
   Common: '#9ca3af',
@@ -30,6 +32,7 @@ interface AssetModalProps {
   onClose: (open: boolean) => void;
   asset: RealNFT | null;
   isDarkMode: boolean;
+  ronPrice: number;
 }
 
 export function AssetModal({
@@ -37,13 +40,26 @@ export function AssetModal({
   onClose,
   asset,
   isDarkMode,
+  ronPrice,
 }: AssetModalProps) {
   const [isImageLoading, setIsImageLoading] = React.useState(true);
+  const [bestOffer, setBestOffer] = React.useState<{
+    price: number;
+    token: string;
+  } | null>(null);
+  const [isLoadingOffer, setIsLoadingOffer] = React.useState(false);
 
-  // Reset loading state when asset changes or modal opens
+  // Reset and Fetch Offer when asset changes
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && asset) {
       setIsImageLoading(true);
+      setIsLoadingOffer(true);
+      setBestOffer(null);
+
+      // Fetch Best Offer
+      fetchBestOffer(asset.contractAddress, asset.tokenId)
+        .then((offer) => setBestOffer(offer))
+        .finally(() => setIsLoadingOffer(false));
     }
   }, [isOpen, asset?.id]);
 
@@ -53,6 +69,20 @@ export function AssetModal({
     }
     return `https://marketplace.roninchain.com/collections/moki-genesis/${currentAsset.tokenId}`;
   };
+
+  // Price Calculation (Value/Floor)
+  const displayPrice = React.useMemo(() => {
+    if (!asset) return { ron: 0, usd: 0, label: 'Value' };
+    const price =
+      asset.listingPrice && asset.listingPrice > 0
+        ? asset.listingPrice
+        : asset.floorPrice;
+    return {
+      ron: price,
+      usd: price * ronPrice,
+      label: asset.listingPrice ? 'Listing Price' : 'Estimated Value',
+    };
+  }, [asset, ronPrice]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -74,11 +104,9 @@ export function AssetModal({
                 <ThreeDCard asset={asset} />
               ) : (
                 <div className="relative w-full h-full max-w-[320px] max-h-[320px] aspect-square flex items-center justify-center">
-                  {/* Skeleton while Image is loading */}
                   {isImageLoading && (
                     <Skeleton className="absolute inset-0 w-full h-full rounded-2xl z-10" />
                   )}
-
                   <Image
                     src={asset.image}
                     alt={asset.name}
@@ -97,7 +125,7 @@ export function AssetModal({
 
             {/* Right Side: Details & Actions */}
             <div className="w-full md:w-1/2 p-6 flex flex-col gap-4 h-full overflow-y-auto">
-              {/* 1. Moki NFT (Type) */}
+              {/* Header Info */}
               <div className="flex items-center justify-between pr-12">
                 <Badge
                   variant="outline"
@@ -105,7 +133,7 @@ export function AssetModal({
                     'uppercase tracking-widest text-[10px]',
                     asset.type === 'Booster Box'
                       ? 'text-purple-500 border-purple-500/30'
-                      : 'text-green-500 border-green-500/30'
+                      : 'text-yellow-500 border-yellow-500/30'
                   )}
                 >
                   {asset.type}
@@ -115,12 +143,10 @@ export function AssetModal({
                 </span>
               </div>
 
-              {/* 2. Moki Name */}
               <DialogTitle className="text-2xl font-bold leading-tight">
                 {asset.name}
               </DialogTitle>
 
-              {/* 3. Moki Fur (Rarity) */}
               <div className="flex items-center gap-2">
                 <div
                   className="w-2 h-2 rounded-full"
@@ -133,8 +159,65 @@ export function AssetModal({
                 </span>
               </div>
 
-              {/* 4. Marketplace Button */}
-              <div className="py-2">
+              {/* Price & Offer Grid */}
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                {/* 1. Estimated Value / Listing */}
+                <div className="p-3 bg-card border border-border/60 rounded-lg">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">
+                    {displayPrice.label}
+                  </span>
+                  <div className="text-lg font-bold font-mono leading-none">
+                    {displayPrice.ron.toLocaleString()}{' '}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      RON
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {displayPrice.usd.toLocaleString(undefined, {
+                      style: 'currency',
+                      currency: 'USD',
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. Top Offer */}
+                <div className="p-3 bg-card border border-border/60 rounded-lg">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">
+                    Top Offer
+                  </span>
+                  {isLoadingOffer ? (
+                    <div className="space-y-1">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  ) : bestOffer ? (
+                    <>
+                      <div className="text-lg font-bold font-mono leading-none">
+                        {bestOffer.price.toLocaleString()}{' '}
+                        <span className="text-sm font-normal text-muted-foreground">
+                          RON
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {(bestOffer.price * ronPrice).toLocaleString(
+                          undefined,
+                          {
+                            style: 'currency',
+                            currency: 'USD',
+                          }
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm font-medium text-muted-foreground h-full flex items-center">
+                      No Offers
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Marketplace Button */}
+              <div className="pb-2">
                 <Button
                   className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white border-none h-11"
                   onClick={() =>
@@ -145,12 +228,10 @@ export function AssetModal({
                 </Button>
               </div>
 
-              {/* 5. Label: Trait */}
+              {/* Traits */}
               <h3 className="font-semibold text-sm text-foreground mt-2">
                 Traits
               </h3>
-
-              {/* 6. Trait List */}
               <div className="flex-1">
                 {asset.attributes.length > 0 ? (
                   <div className="grid grid-cols-2 gap-3">
@@ -160,7 +241,7 @@ export function AssetModal({
                         className="flex flex-col p-3 rounded-md border border-border bg-card/50"
                       >
                         <span className="text-[10px] uppercase text-muted-foreground font-semibold mb-1 truncate">
-                          {attr.trait_type}
+                          {attr.trait_type || attr.key}
                         </span>
                         <span className="font-medium text-foreground truncate">
                           {attr.value}
@@ -174,13 +255,6 @@ export function AssetModal({
                   </p>
                 )}
               </div>
-
-              {/* Description */}
-              {asset.description && (
-                <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground italic">
-                  &quot;{asset.description}&quot;
-                </div>
-              )}
             </div>
           </div>
         )}
