@@ -1,45 +1,32 @@
+// app/actions/fetch-ron-price.ts
 'use server';
 
-interface RonPriceData {
-  usdPrice: number;
-  change24h: number; // Percentage
-}
-
-export async function fetchRonPrice(): Promise<RonPriceData> {
-  const apiKey = process.env.MORALIS_API_KEY;
-  if (!apiKey) {
-    console.error('MORALIS_API_KEY is not defined');
-    return { usdPrice: 0, change24h: 0 };
-  }
-
-  // WRON Contract on Ronin
-  const address = '0xe514d9deb7966c8be0ca922de8a064264ea6bcd4';
-  const url = `https://deep-index.moralis.io/api/v2.2/erc20/${address}/price?chain=ronin`;
-
+export async function fetchRonPrice() {
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
-        'X-API-Key': apiKey,
-      },
-      next: { revalidate: 60 }, // Cache for 60 seconds
-    });
+    // Using CoinGecko API to get RON price in USD
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=ronin&vs_currencies=usd&include_24hr_change=true',
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        next: { revalidate: 60 },
+      }
+    );
 
-    if (!response.ok) throw new Error(`Price fetch failed: ${response.status}`);
+    if (!res.ok) {
+      throw new Error('Failed to fetch RON price');
+    }
 
-    const data = await response.json();
-
-    // Use the 24hrPercentChange directly from the API response
-    // Ensure we parse it as a number since it might come as a string
-    const change = parseFloat(data['24hrPercentChange'] || '0');
+    const data = await res.json();
 
     return {
-      usdPrice: data.usdPrice || 0,
-      change24h: change,
+      usdPrice: data.ronin?.usd || 0,
+      change24h: data.ronin?.usd_24h_change || 0,
     };
   } catch (error) {
-    console.error('Failed to fetch RON price:', error);
+    console.error('Error fetching RON price:', error);
     return { usdPrice: 0, change24h: 0 };
   }
 }
